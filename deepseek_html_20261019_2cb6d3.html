@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Retribusi PKM Tering Seberang 2025</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Dashboard Retribusi</h1>
+        <h2>UPTD Puskesmas Tering Seberang - Tahun 2025</h2>
+    </header>
+
+    <main>
+        <!-- Kartu Ringkasan -->
+        <section class="summary-cards">
+            <div class="card">
+                <h3>Total Penerimaan</h3>
+                <p id="total-penerimaan">Rp 0</p>
+            </div>
+            <div class="card">
+                <h3>Total Pasien</h3>
+                <p id="total-pasien">0</p>
+            </div>
+            <div class="card">
+                <h3>Rata-rata Penerimaan/Bulan</h3>
+                <p id="rata-rata">Rp 0</p>
+            </div>
+        </section>
+
+        <!-- Tabel Rekap Bulanan -->
+        <section class="table-section">
+            <h3>Rekap Penerimaan per Bulan</h3>
+            <table id="tabel-rekap">
+                <thead>
+                    <tr>
+                        <th>Bulan</th>
+                        <th>Jumlah Pasien</th>
+                        <th>Jasa Sarana (Rp)</th>
+                        <th>Jasa Pelayanan (Rp)</th>
+                        <th>Total (Rp)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data akan diisi oleh JavaScript -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Grafik -->
+        <section class="chart-section">
+            <h3>Grafik Penerimaan Bulanan</h3>
+            <canvas id="chart-penerimaan"></canvas>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 UPTD Puskesmas Tering Seberang</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
