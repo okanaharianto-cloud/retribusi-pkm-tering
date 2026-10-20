@@ -1,118 +1,274 @@
+Baik, saya paham. Anda sedang mengedit file index.html di repositori GitHub Anda (retribusi-pkm-tering). Karena Anda ingin memasukkan kodenya langsung ke dalam tag <script> di satu file HTML tersebut, berikut adalah seluruh kode JavaScript lengkap dan utuh dari awal sampai akhir tanpa ada bagian yang dipotong atau disembunyikan.
+Silakan salin blok kode di bawah ini secara keseluruhan dan tempelkan ke dalam bagian <script> di file index.html GitHub Anda:
+javascript
 // =========================================================================
-// 1. MASTER DATA TRANSAKSI JANUARI 2026 DENGAN INTEGRASI DOKUMEN INVOICE DRIVE
+// 1. MASTER DATA THERAPY & TARIF RESMI (UPTD PUSKESMAS TERING SEBERANG)
+// =========================================================================
+const MASTER_THERAPY = [
+    { nama: 'PENGOBATAN UMUM', sarana: 8100, pelayanan: 5400 },
+    { nama: 'KONSULTASI DOKTER UMUM/DOKTER GIGI', sarana: 13500, pelayanan: 9000 },
+    { nama: 'KIR DOKTER', sarana: 15600, pelayanan: 10400 },
+    { nama: 'OBAT NON RACIKAN', sarana: 4500, pelayanan: 3000 },
+    { nama: 'PELAYANAN INFORMASI OBAT', sarana: 7200, pelayanan: 4800 },
+    { nama: 'RACIKAN', sarana: 7200, pelayanan: 4800 },
+    { nama: 'PENANGANAN KASUS DENGAN INJEKSI', sarana: 13500, pelayanan: 9000 },
+    { nama: 'PERAWATAN LUKA SEDERHANA', sarana: 18000, pelayanan: 12000 },
+    { nama: 'TINDAKAN PERAWATAN LUKA SEDERHANA', sarana: 18000, pelayanan: 12000 },
+    { nama: 'TINDAKAN PERAWATAN LUKA DENGAN PENYULIT', sarana: 34200, pelayanan: 22800 },
+    { nama: 'TINDAKAN ANGKAT JAHITAN', sarana: 18000, pelayanan: 12000 },
+    { nama: 'TINDAKAN JAHIT LUKA 1 S.D 3 JAHITAN', sarana: 49500, pelayanan: 33000 },
+    { nama: 'TINDAKAN JAHIT LUKA SETIAP JAHITAN BERIKUTNYA', sarana: 5400, pelayanan: 3600 },
+    { nama: 'TINDAKAN EKSISI ,CROSS INCISI, INCISI', sarana: 61200, pelayanan: 40800 },
+    { nama: 'PENANGANAN KASUS DENGAN NEBULIZER', sarana: 34200, pelayanan: 22800 },
+    { nama: 'TINDAKAN NEBULIZER', sarana: 34200, pelayanan: 22800 },
+    { nama: 'PEMBERIAN SERUM ANTI TETANUS (ATS)', sarana: 49500, pelayanan: 33000 },
+    { nama: 'CEK GDS / GULA DARAH STIK', sarana: 27000, pelayanan: 18000 },
+    { nama: 'CEK HEMOGLOBIN STIK', sarana: 27000, pelayanan: 18000 },
+    { nama: 'URIN RUTIN STIK', sarana: 20700, pelayanan: 13800 },
+    { nama: 'MALARIA RDT', sarana: 27000, pelayanan: 18000 },
+    { nama: 'CEK ASAM URAT STIK', sarana: 27000, pelayanan: 18000 },
+    { nama: 'CEK KOLESTROL STIK', sarana: 29700, pelayanan: 19800 },
+    { nama: 'DARAH RUTIN/DARAH LENGKAP', sarana: 27000, pelayanan: 18000 },
+    { nama: 'PEMERIKSAAN IBU HAMIL ANC RUTIN', sarana: 20700, pelayanan: 13800 },
+    { nama: 'TES KEHAMILAN', sarana: 13500, pelayanan: 9000 },
+    { nama: 'GOLONGAN DARAH', sarana: 10800, pelayanan: 7200 },
+    { nama: 'RHESUS', sarana: 11700, pelayanan: 7800 },
+    { nama: 'TINDIK TELINGA BAYI', sarana: 22500, pelayanan: 15000 },
+    { nama: 'EKSTRAKSI CERUMEN PROP TELINGA', sarana: 22500, pelayanan: 15000 },
+    { nama: 'PELAYANAN CALON PENGANTIN/KESPRO', sarana: 51300, pelayanan: 34200 },
+    { nama: 'PELEPASAN SUSUK KB', sarana: 162000, pelayanan: 108000 },
+    { nama: 'PELAYANAN INJEKSI KB', sarana: 16200, pelayanan: 10800 },
+    { stroke: 'PEMASANGAN INFUS SET PERTAMA', sarana: 88200, pelayanan: 58800 },
+    { nama: 'CEK BUTA WARNA', sarana: 13500, pelayanan: 9000 },
+    { nama: 'PEMERIKSAAN EKG', sarana: 34200, pelayanan: 22800 },
+    { nama: 'OKSIGEN 30 MENIT PERTAMA', sarana: 27000, pelayanan: 18000 },
+    { nama: 'OKSIGEN TIAP 30 MENIT BERIKUTNYA', sarana: 9000, pelayanan: 6000 }
+];
+
+// =========================================================================
+// 2. DATA BASELINE TRANSAKSI HARIAN & TAUTAN GOOGLE DRIVE
 // =========================================================================
 const FOLDER_DRIVE_BASE_URL = "https://drive.google.com/drive/folders/1X_3JGpJmem76u4dw2y2P3jG5qxQKrPdG";
 
 const DATA_JURNAL_INVOICE_2026 = [
-    // Blok Transaksi yang memiliki dokumen Bukti Invoice Dokumen di Folder Drive
     { tanggal: "1/2/2026", rincian: [62, 62, 58.5, 55.5], nama_file: "001 INVOICE JANUARI 2.docx" },
     { tanggal: "1/3/2026", rincian: [62, 55.5], nama_file: "002 INVOICE JANUARI 3.docx" },
-    { tanggal: "1/4/2026", rincian: [], nama_file: "" }, // Hari Libur / Kosong
+    { tanggal: "1/4/2026", rincian: [], nama_file: "" },
     { tanggal: "1/5/2026", rincian: [225, 58.5, 55.5, 55.5], nama_file: "003 INVOICE JANUARI 5.docx" },
     { tanggal: "1/6/2026", rincian: [172.5, 150, 58.5, 55.5, 55.5], nama_file: "004 INVOICE JANUARI 6.docx" },
     { tanggal: "1/7/2026", rincian: [160.5, 100.5, 55.5, 55.5, 55.5, 55.5], nama_file: "005 INVOICE JANUARI 7.docx" },
     { tanggal: "1/8/2026", rincian: [55.5, 36], nama_file: "006 INVOICE JANUARI 8.docx" },
     { tanggal: "1/9/2026", rincian: [58.5], nama_file: "007 INVOICE JANUARI 9.docx" },
     { tanggal: "1/10/2026", rincian: [55.5], nama_file: "008 INVOICE JANUARI 10.docx" },
-    
-    // Log Transaksi Lanjutan Bulan Januari 
+    { tanggal: "1/11/2026", rincian: [], nama_file: "" },
     { tanggal: "1/12/2026", rincian: [78, 55.5], nama_file: "" },
     { tanggal: "1/13/2026", rincian: [166.5, 138, 62, 62, 36], nama_file: "" },
     { tanggal: "1/14/2026", rincian: [62, 62, 55.5], nama_file: "" },
     { tanggal: "1/15/2026", rincian: [120, 62, 62, 62, 62, 55.5], nama_file: "" },
+    { tanggal: "1/16/2026", rincian: [], nama_file: "" },
     { tanggal: "1/17/2026", rincian: [210, 172.5, 62, 62, 62, 55.5, 55.5, 55.5, 55.5, 55.5], nama_file: "" },
+    { tanggal: "1/18/2026", rincian: [210, 172.5, 62, 62, 62], nama_file: "" },
     { tanggal: "1/19/2026", rincian: [247.5, 225, 85.5, 73.5, 62, 62, 62, 55.5, 55.5, 55.5], nama_file: "" },
     { tanggal: "1/20/2026", rincian: [108, 73.5, 62, 62, 55.5], nama_file: "" },
     { tanggal: "1/21/2026", rincian: [62, 62, 55.5, 55.5, 36], nama_file: "" },
     { tanggal: "1/22/2026", rincian: [55.5, 55.5, 62, 62, 62, 62, 62], nama_file: "" },
     { tanggal: "1/23/2026", rincian: [172.5, 112.5, 93, 78, 62, 62, 62, 62, 62, 62, 55.5], nama_file: "" },
     { tanggal: "1/24/2026", rincian: [62, 62, 62, 62, 58.5, 55.5, 55.5, 55.5], nama_file: "" },
-    { tanggal: "1/31/2026", rincian: [], nama_file: "", keterangan: "RETRIBUSI PUSTU DAN PKMK BULAN JANUARI 2026", jumlah_pustu: 5956500 }
+    { tanggal: "1/25/2026", rincian:, nama_file: "" },
+    { tanggal: "1/26/2026", rincian: [], nama_file: "" },
+    { tanggal: "1/27/2026", rincian: [], nama_file: "" },
+    { tanggal: "1/28/2026", rincian: [], nama_file: "" },
+    { tanggal: "1/29/2026", rincian: [204, 99.5, 88.5, 85.5, 78, 62], nama_file: "" },
+    { tanggal: "1/30/2026", rincian:, nama_file: "" },
+    { tanggal: "1/31/2026", rincian:, nama_file: "" }
 ];
 
+const DATA_STS_BPK_2026 = [
+    { no: 1, no_sts: "001/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000162/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 238000, tgl: "2026-01-02", dari: "2026-01-02", hingga: "2026-01-02" },
+    { no: 2, no_sts: "002/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000163/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 117500, tgl: "2026-01-03", dari: "2026-01-03", hingga: "2026-01-03" },
+    { no: 3, no_sts: "003/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000164/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 394500, tgl: "2026-01-05", dari: "2026-01-05", hingga: "2026-01-05" },
+    { no: 4, no_sts: "004/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000165/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 492000, tgl: "2026-01-06", dari: "2026-01-06", hingga: "2026-01-06" },
+    { no: 5, no_sts: "005/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000166/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 483000, tgl: "2026-01-07", dari: "2026-01-07", hingga: "2026-01-07" },
+    { no: 6, no_sts: "006/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000167/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 91500, tgl: "2026-01-08", dari: "2026-01-08", hingga: "2026-01-08" },
+    { no: 7, no_sts: "007/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000168/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 58500, tgl: "2026-01-09", dari: "2026-01-09", hingga: "2026-01-09" },
+    { no: 8, no_sts: "008/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000169/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 55500, tgl: "2026-01-10", dari: "2026-01-10", hingga: "2026-01-10" },
+    { no: 9, no_sts: "009/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000170/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 133500, tgl: "2026-01-12", dari: "2026-01-12", hingga: "2026-01-12" },
+    { no: 10, no_sts: "010/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000171/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 464500, tgl: "2026-01-13", dari: "2026-01-13", hingga: "2026-01-13" },
+    { no: 11, no_sts: "011/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000172/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 179500, tgl: "2026-01-14", dari: "2026-01-14", hingga: "2026-01-14" },
+    { no: 12, no_sts: "012/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000173/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 423500, tgl: "2026-01-15", dari: "2026-01-15", hingga: "2026-01-15" },
+    { no: 13, no_sts: "013/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000174/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 846000, tgl: "2026-01-17", dari: "2026-01-17", hingga: "2026-01-17" },
+    { no: 14, no_sts: "014/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000175/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 984000, tgl: "2026-01-19", dari: "2026-01-19", hingga: "2026-01-19" },
+    { no: 15, no_sts: "015/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000176/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 361000, tgl: "2026-01-20", dari: "2026-01-20", hingga: "2026-01-20" },
+    { no: 16, no_sts: "016/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000177/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 271000, tgl: "2026-01-21", dari: "2026-01-21", hingga: "2026-01-21" },
+    { no: 17, no_sts: "017/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000178/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 421000, tgl: "2026-01-22", dari: "2026-01-22", hingga: "2026-01-22" },
+    { no: 18, no_sts: "018/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000179/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 883500, tgl: "2026-01-23", dari: "2026-01-23", hingga: "2026-01-23" },
+    { no: 19, no_sts: "019/DG QRIS/PKM-TERING/I/206",  no_sipd: "64.07/42.0/000180/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 473000, tgl: "2026-01-24", dari: "2026-01-24", hingga: "2026-01-24" },
+    { no: 20, no_sts: "020/DG QRIS/PKM-TERING/I/206",  no_sipd: "64.07/42.0/000181/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 1025000, tgl: "2026-01-26", dari: "2026-01-26", hingga: "2026-01-26" },
+Gunakan kode dengan hati-hati.
+{ no: 21, no_sts: "021/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000182/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 414500, tgl: "2026-01-27", dari: "2026-01-27", hingga: "2026-01-27" },
+{ no: 22, no_sts: "022/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000183/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 416000, tgl: "2026-01-28", dari: "2026-01-28", hingga: "2026-01-28" },
+{ no: 23, no_sts: "023/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000184/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 62000,  tgl: "2026-01-29", dari: "2026-01-29", hingga: "2026-01-29" },
+{ no: 24, no_sts: "024/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000185/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 1014000, tgl: "2026-01-30", dari: "2026-01-30", hingga: "2026-01-30" },
+{ no: 25, no_sts: "025/DG QRIS/PKM-TERING/I/2026", no_sipd: "64.07/42.0/000186/STS/1.02.0.00.0.00.01.0000/3/2026", nilai: 597500, tgl: "2026-01-31", dari: "2026-01-31", hingga: "2026-01-31" }
+];
+// Global State untuk Input Dinamis Pasien
+let dataPasienHarian = JSON.parse(localStorage.getItem('dataUraianHarian')) || [];
+let currentTherapyIndex = 0;
 // =========================================================================
-// 2. PARSER PARSING KOMPONEN DESIMAL RETRIBUSI KE RUPIAH RIIL
+// 3. FUNGSI MANAJEMEN INPUT FORM DINAMIS (DYNAMIC ROWS)
 // =========================================================================
-function konversiPecahanKeRupiah(rincianArray) {
-    if (!rincianArray || rincianArray.length === 0) return 0;
-    let sum = rincianArray.reduce((acc, val) => acc + val, 0);
-    return sum * 1000;
+function tambahBarisTherapy(data = { nama: '', sarana: 0, pelayanan: 0 }) {
+currentTherapyIndex++;
+const tbody = document.getElementById('tbody-therapy');
+if (!tbody) return;
+const tr = document.createElement('tr');
+tr.id = therapy-row-${currentTherapyIndex};
+let options = MASTER_THERAPY.map(t =>
+<option value="${t.nama}" data-sarana="${t.sarana}" data-pelayanan="${t.pelayanan}" ${data.nama === t.nama ? 'selected' : ''}>${t.nama}</option>
+).join('');
+const isLainnya = data.nama && !MASTER_THERAPY.find(t => t.nama === data.nama);
+tr.innerHTML = `
+`;
+tbody.appendChild(tr);
 }
-
-// =========================================================================
-// 3. ENGINES EXPORTER DATA RETRIBUSI INTEGRASI HYPERLINK DOKUMEN DRIVE
-// =========================================================================
-function exportRetribusiDenganLinkInvoice() {
-    let matriksExcel = [
-        ["REKAPAN RETRIBUSI KESEHATAN UPT PUSKESMAS TERING SEBERANG TAHUN 2026"],
-        ["SINKRONISASI BUKTI TRANS-DOKUMEN INVOICE GOOGLE DRIVE"],
-        [],
-        ["TANGGAL", "RINCIAN DETIL KOMPONEN (Rp '000)", "", "", "", "", "", "", "", "JUMLAH (Rp)", "NAMA FILE BUKTI KAS", "LINK AKSES DOKUMEN (DRIVE)"]
-    ];
-
-    let grandTotalPendapatan = 0;
-
-    DATA_INVOICE_2026.forEach((item, index) => {
-        let totalRupiahBaris = item.jumlah_pustu ? item.jumlah_pustu : konversiPecahanKeRupiah(item.rincian);
-        grandTotalPendapatan += totalRupiahBaris;
-
-        // Susunan kolom baris dasar
-        let barisData = [item.tanggal];
-
-        // Petakan rincian pecahan (maksimal 8 kolom menyamping)
-        for (let i = 0; i < 8; i++) {
-            barisData.push(item.rincian[i] !== undefined ? item.rincian[i] : "");
-        }
-
-        // Tambahkan kolom Jumlah, Nama File Dokumen, dan Placeholder Tautan Konten teks biasa
-        barisData.push(totalRupiahBaris);
-        barisData.push(item.nama_file ? item.nama_file : (item.keterangan ? item.keterangan : "-"));
-        
-        // Buat teks url folder drive jika dokumen terdeteksi ada di dalam folder Google Drive
-        barisData.push(item.nama_file ? `${FOLDER_DRIVE_BASE_URL}` : "-");
-
-        matriksExcel.push(barisData);
-    });
-
-    // Tambahkan baris total akumulatif kas
-    matriksExcel.push([]);
-    matriksExcel.push(["", "TOTAL AKUMULASI KAS BULANAN", "", "", "", "", "", "", "", grandTotalPendapatan, "Status Dokumen Terpeta", "Lengkap"]);
-
-    // Pembuatan Worksheet via SheetJS
-    const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.aoa_to_sheet(matriksExcel);
-
-    // INJECT FORMULA HYPERLINK EXCEL AKTIF PADA KOLOM L
-    DATA_INVOICE_2026.forEach((item, index) => {
-        if (item.nama_file) {
-            let rowNumber = index + 5; // Menyesuaikan baris data setelah baris header ke-4
-            let cellAddress = `L${rowNumber}`;
-            
-            // Konfigurasi formula internal agar cell L diklik langsung membuka folder Google Drive
-            worksheet[cellAddress] = {
-                t: 's',
-                v: "Buka Invoice Drive",
-                f: `HYPERLINK("${FOLDER_DRIVE_BASE_URL}","Klik Buka File")`
-            };
-        }
-    });
-
-    // Atur proporsi lebar kolom agar teks link tautan panjang tidak terpotong visual
-    worksheet['!cols'] = [
-        { wch: 11 }, // Tanggal
-        { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }, // Rincian
-        { wch: 16 }, // Jumlah
-        { wch: 28 }, // Nama File Bukti Kas
-        { wch: 16 }  // Link Akses
-    ];
-
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Kompilasi Invoice JAN 2026");
-    XLSX.writeFile(workbook, `REKAPAN_RETRIBUSI_LINK_INVOICE_JAN_2026.xlsx`);
-    
-    alert("Berhasil mengeksport! File Excel terintegrasi tautan berkas kuitansi harian Drive telah terunduh.");
+function autoFillHarga(selectElement) {
+const row = selectElement.closest('tr');
+const inputManual = row.querySelector('.t-nama-manual');
+const inputSarana = row.querySelector('.t-sarana');
+const inputPelayanan = row.querySelector('.t-pelayanan');
+if (selectElement.value === 'LAINNYA') {
+inputManual.style.display = 'block';
+inputManual.value = '';
+inputSarana.value = 0;
+inputPelayanan.value = 0;
+inputSarana.removeAttribute('readonly');
+inputPelayanan.removeAttribute('readonly');
+} else {
+inputManual.style.display = 'none';
+inputManual.value = '';
+const selectedOption = selectElement.options[selectElement.selectedIndex];
+inputSarana.value = selectedOption.getAttribute('data-sarana') || 0;
+inputPelayanan.value = selectedOption.getAttribute('data-pelayanan') || 0;
+inputSarana.setAttribute('readonly', true);
+inputPelayanan.setAttribute('readonly', true);
 }
-
-// Inisialisasi DOM runtime sistem
-document.addEventListener("DOMContentLoaded", () => {
-    console.log("Mesin Sinkronisasi Data Rekapan Retribusi & Invoice Drive Aktif.");
+}
+function hapusBarisTherapy(index) {
+const row = document.getElementById(therapy-row-${index});
+if (row) row.remove();
+}
+function hitungTotalBarisRincian(arrayRincian) {
+if (!arrayRincian || arrayRincian.length === 0) return 0;
+return arrayRincian.reduce((a, b) => a + b, 0) * 1000;
+}
+// =========================================================================
+// 4. MODUL EXPORT FORMAT BPK TA 2026
+// =========================================================================
+function exportTemplateKonfirmasiBPK() {
+let matrixSheet = [
+["BADAN PEMERIKSA KEUANGAN"],
+["FORM PENGISIAN KONFIRMASI PENYETORAN PENDAPATAN"],
+["TAHUN ANGGARAN 2026"],
+[],
+["Petunjuk Pengisian:"],
+["1. Mohon untuk tidak merubah format excel penulisan pada form ini (tulis tanggal sesuai dengan format excel yg ada) dan tidak menambahkan kolom kenan dan/atau kiri."],
+["2. Mohon isikan kolom 'No. STS' sesuai dengan nomor seluruh STS selama TA 2026."],
+["3. Mohon isikan kolom 'Nilai STS' sesuai dengan nilai setoran masing-masing STS selama TA 2026."],
+["4. Mohon isikan kolom 'Tanggal STS' sesuai dengan tanggal masing-masing STS selama TA 2026."],
+["5. Mohon isikan kolom 'Penyetoran Pendapatan yang Diterima dari Tanggal' sesuai dengan tanggal awal penerimaan Pendapatan atas STS terkait berdasarkan kondisi sesungguhnya dan/atau catatan penerimaan PKM."],
+["6. Mohon isikan kolom 'Penyetoran Pendapatan yang Diterima Hingga Tanggal' sesuai dengan tanggal terakhir penerimaan Pendapatan atas STS terkait berdasarkan kondisi sesungguhnya dan/atau catatan penerimaan PKM."],
+["7. Mohon pastikan jika seluruh STS telah terisi pada Form Pengisian Konfirmasi Penyetoran Pendapatan dengan membandingkan antara nilai total pada tabel dengan nilai realisasi pendapatan PKM selama TA 2026."],
+[],
+["Daftar Jangka Waktu Penyetoran Pendapatan UPT PKM TERING SEBERANG TAHUN 2026"],
+["No", "No. STS", "", "Nilai STS", "Tanggal STS", "Penyetoran Pendapatan yang Diterima", ""],
+["", "", "", "", "", "Dari Tanggal", "Hingga Tanggal"]
+];
+let totalAkumulasiNilai = 0;
+DATA_STS_BPK_2026.forEach(item => {
+totalAkumulasiNilai += item.nilai;
+matrixSheet.push([item.no, item.no_sts, item.no_sipd, item.nilai, item.tgl, item.dari, item.hingga]);
 });
+matrixSheet.push(["", "TOTAL REALISASI", "", totalAkumulasiNilai, "", "", ""]);
+const workbook = XLSX.utils.book_new();
+const worksheet = XLSX.utils.aoa_to_sheet(matrixSheet);
+worksheet['!merges'] = [
+{ s: { r: 14, c: 0 }, e: { r: 15, c: 0 } },
+{ s: { r: 14, c: 1 }, e: { r: 15, c: 2 } },
+{ s: { r: 14, c: 3 }, e: { r: 15, c: 3 } },
+{ s: { r: 14, c: 4 }, e: { r: 15, c: 4 } },
+{ s: { r: 14, c: 5 }, e: { r: 14, c: 6 } }
+];
+worksheet['!cols'] = [
+{ wch: 5 }, { wch: 32 }, { wch: 52 }, { wch: 16 }, { wch: 15 }, { wch: 15 }, { wch: 15 }
+];
+XLSX.utils.book_append_sheet(workbook, worksheet, "Konfirmasi Penyetoran BPK");
+XLSX.writeFile(workbook, FORM_BPK_KONFIRMASI_SETORAN_PKM_TERING_2026.xlsx);
+}
+// =========================================================================
+// 5. MODUL EXPORT REKAPAN HARIAN MULTI-SHEET DENGAN HYPERLINK INVOICE DRIVE
+// =========================================================================
+function exportExcelMultiSheetKasRetribusi() {
+const workbook = XLSX.utils.book_new();
+let matriksExcel = [
+["REKAPAN RETRIBUSI KESEHATAN UPT PUSKESMAS TERING SEBERANG TAHUN 2026"],
+["SINKRONISASI BUKTI TRANS-DOKUMEN INVOICE GOOGLE DRIVE"],
+[],
+["TANGGAL", "RINCIAN DETIL KOMPONEN (Rp '000)", "", "", "", "", "", "", "", "JUMLAH (Rp)", "NAMA FILE BUKTI KAS", "LINK AKSES DOKUMEN (DRIVE)"]
+];
+let grandTotalPendapatan = 0;
+DATA_JURNAL_INVOICE_2026.forEach((item, index) => {
+let totalRupiahBaris = item.jumlah_pustu ? item.jumlah_pustu : hitungTotalBarisRincian(item.rincian);
+grandTotalPendapatan += totalRupiahBaris;
+let barisData = [item.tanggal];
+for (let i = 0; i < 8; i++) {
+barisData.push(item.rincian[i] !== undefined ? item.rincian[i] : "");
+}
+barisData.push(totalRupiahBaris);
+barisData.push(item.nama_file ? item.nama_file : (item.keterangan ? item.keterangan : "-"));
+barisData.push(item.nama_file ? ${FOLDER_DRIVE_BASE_URL} : "-");
+matriksExcel.push(barisData);
+});
+matriksExcel.push([]);
+matriksExcel.push(["", "TOTAL AKUMULASI KAS BULANAN", "", "", "", "", "", "", "", grandTotalPendapatan, "Status Dokumen Terpeta", "Lengkap"]);
+const worksheet = XLSX.utils.aoa_to_sheet(matriksExcel);
+DATA_JURNAL_INVOICE_2026.forEach((item, index) => {
+if (item.nama_file) {
+let rowNumber = index + 5;
+let cellAddress = L${rowNumber};
+worksheet[cellAddress] = {
+t: 's',
+v: "Buka Invoice Drive",
+f: HYPERLINK("${FOLDER_DRIVE_BASE_URL}","Klik Buka File")
+};
+}
+});
+worksheet['!cols'] = [
+{ wch: 11 },
+{ wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 },
+{ wch: 16 }, { wch: 28 }, { wch: 16 }
+];
+XLSX.utils.book_append_sheet(workbook, worksheet, "JAN");
+// Generate tab bulan lainnya secara kosong formal agar sesuai struktur web
+const bulanLain = ["FEB", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
+bulanLain.forEach(bln => {
+let emptyMatrix = [
+["REKAPAN RETRIBUSI KESEHATAN UPT PUSKESMAS TERING SEBERANG TAHUN 2026"],
+[BULAN : ${bln}],
+[],
+["TANGGAL", "RINCIAN TRANSAKSI", "", "", "", "", "JUMLAH (Rp)"],
+["-", "Belum ada transaksi kas terinput", "", "", "", "", 0]
+];
+let wsKosong = XLSX.utils.aoa_to_sheet(emptyMatrix);
+XLSX.utils.book_append_sheet(workbook, wsKosong, bln);
+});
+XLSX.writeFile(workbook, REKAPAN_RETRIBUSI_HARIAN_MULTI_SHEET_PKM_2026.xlsx);
+alert("Sukses mengompilasi data! File Excel Multi-Tab telah berhasil diunduh.");
+}
+// Runtime Initialization
+document.addEventListener("DOMContentLoaded", () => {
+console.log("Sistem Aplikasi SI-RETRIBUSI PKM Tering Seberang TA 2026 Berhasil Dimuat.");
+});
+
+<FollowUp>
+Apakah Anda ingin saya membuatkan **desain form input HTML (elemen modal Bootstrap)** agar selaras dengan variabel penampung `tbody-therapy` yang digunakan di dalam skrip JavaScript di atas?
+</FollowUp>
