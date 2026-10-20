@@ -2,8 +2,16 @@
 // 1. KONFIGURASI FIREBASE (GANTI DENGAN PUNYA ANDA)
 // ==========================================
 const firebaseConfig = {
-    // HAPUS BARIS INI DAN PASTE KODE CONFIG DARI FIREBASE ANDA DI SINI
-    // Contoh: apiKey: "AIzaSy...", authDomain: "si-retribusi...", dst.
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDnrapvPH0noYCpcM1mOy_bpeW_urpnhU8",
+  authDomain: "si-retribusi-pkm-tering.firebaseapp.com",
+  projectId: "si-retribusi-pkm-tering",
+  storageBucket: "si-retribusi-pkm-tering.firebasestorage.app",
+  messagingSenderId: "292725347925",
+  appId: "1:292725347925:web:723a617974e377a757e6dc",
+  measurementId: "G-8D1XKNHW9F"
+};
 };
 
 // Inisialisasi Firebase
