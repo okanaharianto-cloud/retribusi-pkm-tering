@@ -41,7 +41,7 @@
         .sidebar { width: 260px; background: var(--bg-sidebar); color: white; display: flex; flex-direction: column; }
         .sidebar-header { padding: 20px; font-weight: 700; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; gap: 10px; }
         .sidebar-header img { width: 30px; height: auto; }
-        .sidebar-menu { list-style: none; flex: 1; padding: 20px 0; }
+        .sidebar-menu { list-style: none; flex: 1; padding: 20px 0; overflow-y: auto; }
         .sidebar-menu li { padding: 15px 25px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; opacity: 0.8; }
         .sidebar-menu li:hover, .sidebar-menu li.active { background: rgba(255,255,255,0.1); opacity: 1; border-left: 4px solid var(--primary); }
         .sidebar-footer { padding: 20px; }
@@ -75,6 +75,7 @@
         .btn { padding: 10px 15px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; color: white; }
         .btn-primary { background: var(--primary); } .btn-primary:hover { background: var(--primary-dark); }
         .btn-success { background: var(--success); }
+        .btn-danger { background: var(--danger); }
         
         .table-responsive { overflow-x: auto; max-height: 400px; }
         table { width: 100%; border-collapse: collapse; }
@@ -101,15 +102,15 @@
         <div class="login-box">
             <img src="logo.png" alt="Logo Puskesmas">
             <h2>SI-RETRIBUSI</h2>
-            <p>Sistem Informasi Retribusi PKM Tering Seberang</p>
+            <p id="login-subtitle">Sistem Informasi Retribusi PKM Tering Seberang</p>
             <form id="login-form">
                 <div class="input-group">
                     <i class="fa-solid fa-user"></i>
-                    <input type="text" id="username" placeholder="Username (admin)" required>
+                    <input type="text" id="username" placeholder="Username" required>
                 </div>
                 <div class="input-group">
                     <i class="fa-solid fa-lock"></i>
-                    <input type="password" id="password" placeholder="Password (123)" required>
+                    <input type="password" id="password" placeholder="Password" required>
                 </div>
                 <button type="submit" class="btn-login">Masuk Sistem</button>
             </form>
@@ -125,6 +126,8 @@
             <ul class="sidebar-menu">
                 <li class="active" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-pie"></i> Dashboard</li>
                 <li onclick="switchTab('harian')"><i class="fa-solid fa-file-invoice"></i> Input Harian</li>
+                <li onclick="switchTab('layanan')"><i class="fa-solid fa-hand-holding-medical"></i> Master Layanan</li>
+                <li onclick="switchTab('pengaturan')"><i class="fa-solid fa-gear"></i> Pengaturan</li>
             </ul>
             <div class="sidebar-footer">
                 <button onclick="logout()" class="btn-logout"><i class="fa-solid fa-sign-out-alt"></i> Keluar</button>
@@ -137,6 +140,7 @@
                 <div class="user-profile"><span>Administrator</span><i class="fa-solid fa-circle-user" style="font-size: 1.5rem; color: var(--primary);"></i></div>
             </header>
 
+            <!-- TAB DASHBOARD -->
             <div id="tab-dashboard" class="tab-content active">
                 <div class="summary-cards">
                     <div class="card"><div class="card-icon bg-blue"><i class="fa-solid fa-wallet"></i></div><div class="card-info"><h3>Total Penerimaan Setahun</h3><p id="total-penerimaan">Rp 0</p></div></div>
@@ -158,6 +162,7 @@
                 </div>
             </div>
 
+            <!-- TAB HARIAN -->
             <div id="tab-harian" class="tab-content">
                 <div class="section-box">
                     <div class="section-header">
@@ -172,9 +177,53 @@
                     </div>
                 </div>
             </div>
+
+            <!-- TAB MASTER LAYANAN (BARU) -->
+            <div id="tab-layanan" class="tab-content">
+                <div class="section-box">
+                    <div class="section-header">
+                        <h3>Daftar Tarif Layanan</h3>
+                        <div>
+                            <button class="btn btn-primary" onclick="bukaFormLayanan()"><i class="fa-solid fa-plus"></i> Tambah Layanan</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Nama Layanan</th><th>Jasa Sarana</th><th>Jasa Pelayanan</th><th>Total Tarif</th><th>Aksi</th></tr></thead>
+                            <tbody id="tbody-layanan"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB PENGATURAN (BARU) -->
+            <div id="tab-pengaturan" class="tab-content">
+                <div class="section-box">
+                    <div class="section-header"><h3>Pengaturan Aplikasi</h3></div>
+                    <form id="formPengaturan">
+                        <div class="form-group">
+                            <label>Nama Instansi / Puskesmas</label>
+                            <input type="text" id="setNamaPkm" required>
+                        </div>
+                        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #E2E8F0;">
+                        <h4 style="margin-bottom: 15px; color: var(--bg-sidebar);">Ganti Akun Login</h4>
+                        <div class="form-group">
+                            <label>Username Baru</label>
+                            <input type="text" id="setUser" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password Baru</label>
+                            <input type="text" id="setPass" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Simpan Pengaturan</button>
+                    </form>
+                </div>
+            </div>
+
         </main>
     </div>
 
+    <!-- MODAL BULANAN -->
     <div id="modalBulanan" class="modal">
         <div class="modal-content">
             <div class="modal-header"><h4>Tambah Data Bulanan</h4><span class="close" onclick="tutupFormBulanan()">&times;</span></div>
@@ -192,13 +241,19 @@
         </div>
     </div>
 
+    <!-- MODAL HARIAN (DENGAN DROPDOWN LAYANAN) -->
     <div id="modalHarian" class="modal">
         <div class="modal-content">
             <div class="modal-header"><h4>Input Data Harian</h4><span class="close" onclick="tutupFormHarian()">&times;</span></div>
             <form id="formHarian">
                 <div class="form-group"><label>Tanggal</label><input type="date" id="inputTanggal" required></div>
                 <div class="form-group"><label>Nama Pasien</label><input type="text" id="inputNama" required></div>
-                <div class="form-group"><label>Jenis Layanan</label><input type="text" id="inputLayanan" placeholder="Cth: Pengobatan Umum" required></div>
+                <div class="form-group">
+                    <label>Jenis Layanan</label>
+                    <select id="inputLayanan" required onchange="autoFillTarif()">
+                        <option value="">-- Pilih Layanan --</option>
+                    </select>
+                </div>
                 <div class="form-group"><label>Jasa Sarana (Rp)</label><input type="number" id="inputSaranaHarian" required min="0"></div>
                 <div class="form-group"><label>Jasa Pelayanan (Rp)</label><input type="number" id="inputPelayananHarian" required min="0"></div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Simpan Data</button>
@@ -206,59 +261,34 @@
         </div>
     </div>
 
+    <!-- MODAL MASTER LAYANAN -->
+    <div id="modalLayanan" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h4>Tambah Master Layanan</h4><span class="close" onclick="tutupFormLayanan()">&times;</span></div>
+            <form id="formLayanan">
+                <div class="form-group"><label>Nama Layanan</label><input type="text" id="inputNamaLayanan" placeholder="Cth: Pengobatan Umum" required></div>
+                <div class="form-group"><label>Jasa Sarana (Rp)</label><input type="number" id="inputSaranaLayanan" required min="0"></div>
+                <div class="form-group"><label>Jasa Pelayanan (Rp)</label><input type="number" id="inputPelayananLayanan" required min="0"></div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Simpan Layanan</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         // ==========================================
-        // 1. LOGIKA LOGIN (Ditaruh paling atas)
+        // 1. KONFIGURASI & VARIABEL GLOBAL
         // ==========================================
-        document.getElementById('login-form').addEventListener('submit', function(e) {
-            e.preventDefault(); 
-            const user = document.getElementById('username').value.trim();
-            const pass = document.getElementById('password').value.trim();
-            
-            if(user === 'admin' && pass === '123') {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('app-screen').style.display = 'flex';
-                initApp(); 
-            } else {
-                Swal.fire('Akses Ditolak', 'Username atau Password salah! Gunakan admin / 123', 'error');
-            }
-        });
-
-        // ==========================================
-        // 2. KONFIGURASI FIREBASE (OPSIONAL)
-        // ==========================================
-        // JIKA ANDA SUDAH PUNYA KODE FIREBASE, PASTE DI SINI. 
-        // JIKA MASIH KOSONG, APLIKASI TETAP JALAN MENGGUNAKAN LOCALSTORAGE.
         const firebaseConfig = {
-            apiKey: "AIzaSyDnrapvPH0noYCpcM1mOy_bpeW_urpnhU8",
-  authDomain: "si-retribusi-pkm-tering.firebaseapp.com",
-  projectId: "si-retribusi-pkm-tering",
-  storageBucket: "si-retribusi-pkm-tering.firebasestorage.app",
-  messagingSenderId: "292725347925",
-  appId: "1:292725347925:web:723a617974e377a757e6dc",
-  measurementId: "G-8D1XKNHW9F"
+            // Paste Kode Firebase Anda di Sini Jika Ingin Online
         };
 
         let db = null;
         let useFirebase = false;
 
-        // Cek apakah config firebase sudah diisi atau belum
         if (Object.keys(firebaseConfig).length > 0 && firebaseConfig.apiKey !== "") {
-            try {
-                firebase.initializeApp(firebaseConfig);
-                db = firebase.firestore();
-                useFirebase = true;
-                console.log("Mode: Firebase (Online)");
-            } catch (error) {
-                console.error("Firebase Error: ", error);
-            }
-        } else {
-            console.log("Mode: LocalStorage (Offline) - Firebase belum diset.");
+            try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); useFirebase = true; } catch (e) { console.error(e); }
         }
 
-        // ==========================================
-        // 3. VARIABEL & LOGIKA APLIKASI
-        // ==========================================
         const dataDefaultBulanan = [
             { bulan: "Januari", pasien: 115, sarana: 3528300, pelayanan: 2352200, total: 5880500 },
             { bulan: "Februari", pasien: 110, sarana: 3665100, pelayanan: 2443400, total: 6108500 },
@@ -274,62 +304,99 @@
             { bulan: "Desember", pasien: 182, sarana: 7130100, pelayanan: 4753400, total: 11883500 }
         ];
 
+        // Data Layanan Default
+        const defaultLayanan = [
+            { id: 1, nama: "Pengobatan Umum", sarana: 8100, pelayanan: 5400 },
+            { id: 2, nama: "KIA / Kebidanan", sarana: 15000, pelayanan: 10000 },
+            { id: 3, nama: "Pelayanan Gigi", sarana: 20000, pelayanan: 15000 }
+        ];
+
         let dataBulanan = [];
         let dataHarian = [];
+        let dataLayanan = JSON.parse(localStorage.getItem('masterLayananPKM')) || [...defaultLayanan];
         let chartInstance = null;
 
-        function initApp() {
-            if (useFirebase) {
-                tarikDataBulananFirebase();
-                tarikDataHarianFirebase();
+        // Terapkan Pengaturan (Nama PKM & Akun)
+        const setNama = localStorage.getItem('setNamaPkm') || "Sistem Informasi Retribusi PKM Tering Seberang";
+        const setUser = localStorage.getItem('setUser') || "admin";
+        const setPass = localStorage.getItem('setPass') || "123";
+        
+        document.getElementById('login-subtitle').innerText = setNama;
+        document.getElementById('setNamaPkm').value = setNama;
+        document.getElementById('setUser').value = setUser;
+        document.getElementById('setPass').value = setPass;
+        document.title = "SI-RETRIBUSI | " + setNama;
+
+        // ==========================================
+        // 2. LOGIKA LOGIN
+        // ==========================================
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            
+            if(user === setUser && pass === setPass) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-screen').style.display = 'flex';
+                initApp(); 
             } else {
-                // Fallback ke LocalStorage jika Firebase belum diset
-                dataBulanan = JSON.parse(localStorage.getItem('dataBulananPKM')) || [...dataDefaultBulanan];
-                dataHarian = JSON.parse(localStorage.getItem('dataHarianPKM')) || [];
-                renderBulananUI();
-                renderHarianUI();
+                Swal.fire('Akses Ditolak', 'Username atau Password salah!', 'error');
             }
-        }
+        });
 
         function logout() {
             Swal.fire({ title: 'Keluar Aplikasi?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#EF4444', confirmButtonText: 'Ya, Keluar' })
             .then((result) => { if (result.isConfirmed) location.reload(); });
         }
 
+        // ==========================================
+        // 3. INISIALISASI APLIKASI
+        // ==========================================
+        function initApp() {
+            if (useFirebase) {
+                db.collection("bulanan").onSnapshot((snapshot) => {
+                    if (snapshot.empty) { dataDefaultBulanan.forEach(item => db.collection("bulanan").doc(item.bulan).set(item)); return; }
+                    dataBulanan = [];
+                    snapshot.forEach((doc) => dataBulanan.push(doc.data()));
+                    sortBulanan(); renderBulananUI();
+                });
+                db.collection("harian").orderBy("tanggal", "desc").onSnapshot((snapshot) => {
+                    dataHarian = [];
+                    snapshot.forEach((doc) => { let data = doc.data(); data.id = doc.id; dataHarian.push(data); });
+                    renderHarianUI();
+                });
+            } else {
+                dataBulanan = JSON.parse(localStorage.getItem('dataBulananPKM')) || [...dataDefaultBulanan];
+                dataHarian = JSON.parse(localStorage.getItem('dataHarianPKM')) || [];
+                renderBulananUI(); renderHarianUI();
+            }
+            renderLayananUI();
+            isiDropdownLayanan();
+        }
+
+        function sortBulanan() {
+            const urutan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            dataBulanan.sort((a, b) => urutan.indexOf(a.bulan) - urutan.indexOf(b.bulan));
+        }
+
+        // ==========================================
+        // 4. NAVIGASI TAB
+        // ==========================================
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.sidebar-menu li').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tabName).classList.add('active');
             event.currentTarget.classList.add('active');
-            document.getElementById('page-title').innerText = tabName === 'dashboard' ? 'Dashboard Retribusi' : 'Log Data Harian Pasien';
+            
+            const titles = { 'dashboard': 'Dashboard Retribusi', 'harian': 'Log Data Harian Pasien', 'layanan': 'Master Tarif Layanan', 'pengaturan': 'Pengaturan Sistem' };
+            document.getElementById('page-title').innerText = titles[tabName];
         }
 
         const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
 
-        // --- LOGIKA FIREBASE ---
-        function tarikDataBulananFirebase() {
-            db.collection("bulanan").onSnapshot((snapshot) => {
-                if (snapshot.empty) {
-                    dataDefaultBulanan.forEach(item => db.collection("bulanan").doc(item.bulan).set(item));
-                    return;
-                }
-                dataBulanan = [];
-                snapshot.forEach((doc) => dataBulanan.push(doc.data()));
-                const urutan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-                dataBulanan.sort((a, b) => urutan.indexOf(a.bulan) - urutan.indexOf(b.bulan));
-                renderBulananUI();
-            });
-        }
-
-        function tarikDataHarianFirebase() {
-            db.collection("harian").orderBy("tanggal", "desc").onSnapshot((snapshot) => {
-                dataHarian = [];
-                snapshot.forEach((doc) => { let data = doc.data(); data.id = doc.id; dataHarian.push(data); });
-                renderHarianUI();
-            });
-        }
-
-        // --- RENDER UI ---
+        // ==========================================
+        // 5. RENDER DATA
+        // ==========================================
         function renderBulananUI() {
             const totalPenerimaan = dataBulanan.reduce((acc, item) => acc + item.total, 0);
             const totalPasien = dataBulanan.reduce((acc, item) => acc + item.pasien, 0);
@@ -369,34 +436,45 @@
             if (!useFirebase) localStorage.setItem('dataHarianPKM', JSON.stringify(dataHarian));
         }
 
-        // --- MODAL & SIMPAN ---
-        function bukaFormBulanan() { document.getElementById('modalBulanan').style.display = 'block'; }
-        function tutupFormBulanan() { document.getElementById('modalBulanan').style.display = 'none'; document.getElementById('formBulanan').reset(); }
-        function bukaFormHarian() { document.getElementById('inputTanggal').valueAsDate = new Date(); document.getElementById('modalHarian').style.display = 'block'; }
-        function tutupFormHarian() { document.getElementById('modalHarian').style.display = 'none'; document.getElementById('formHarian').reset(); }
+        function renderLayananUI() {
+            const tbody = document.getElementById('tbody-layanan');
+            tbody.innerHTML = '';
+            dataLayanan.forEach((item, index) => {
+                tbody.innerHTML += `<tr>
+                    <td><strong>${item.nama}</strong></td>
+                    <td>${formatRupiah(item.sarana)}</td>
+                    <td>${formatRupiah(item.pelayanan)}</td>
+                    <td><span style="color: var(--primary); font-weight: bold;">${formatRupiah(item.sarana + item.pelayanan)}</span></td>
+                    <td><button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.8rem;" onclick="hapusLayanan(${index})">Hapus</button></td>
+                </tr>`;
+            });
+            localStorage.setItem('masterLayananPKM', JSON.stringify(dataLayanan));
+        }
 
-        document.getElementById('formBulanan').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const bulan = document.getElementById('inputBulan').value;
-            const pasien = parseInt(document.getElementById('inputPasienBulanan').value);
-            const sarana = parseInt(document.getElementById('inputSaranaBulanan').value);
-            const pelayanan = parseInt(document.getElementById('inputPelayananBulanan').value);
-            const total = sarana + pelayanan;
+        function isiDropdownLayanan() {
+            const select = document.getElementById('inputLayanan');
+            select.innerHTML = '<option value="">-- Pilih Layanan --</option>';
+            dataLayanan.forEach(item => {
+                select.innerHTML += `<option value="${item.nama}" data-sarana="${item.sarana}" data-pelayanan="${item.pelayanan}">${item.nama}</option>`;
+            });
+        }
 
-            if (useFirebase) {
-                db.collection("bulanan").doc(bulan).set({ bulan, pasien, sarana, pelayanan, total })
-                .then(() => { tutupFormBulanan(); Swal.fire({ icon: 'success', title: 'Tersimpan (Online)!', text: 'Data masuk Firebase.', timer: 1500, showConfirmButton: false }); });
+        // ==========================================
+        // 6. FORM SUBMISSIONS
+        // ==========================================
+        
+        // Auto Fill Tarif saat layanan dipilih
+        function autoFillTarif() {
+            const select = document.getElementById('inputLayanan');
+            const selectedOption = select.options[select.selectedIndex];
+            if (selectedOption.value !== "") {
+                document.getElementById('inputSaranaHarian').value = selectedOption.getAttribute('data-sarana');
+                document.getElementById('inputPelayananHarian').value = selectedOption.getAttribute('data-pelayanan');
             } else {
-                // Simpan Offline
-                const index = dataBulanan.findIndex(i => i.bulan === bulan);
-                if(index !== -1) dataBulanan[index] = { bulan, pasien, sarana, pelayanan, total };
-                else dataBulanan.push({ bulan, pasien, sarana, pelayanan, total });
-                const urutan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-                dataBulanan.sort((a, b) => urutan.indexOf(a.bulan) - urutan.indexOf(b.bulan));
-                tutupFormBulanan(); renderBulananUI();
-                Swal.fire({ icon: 'success', title: 'Tersimpan (Offline)', text: 'Data tersimpan di browser ini.', timer: 1500, showConfirmButton: false });
+                document.getElementById('inputSaranaHarian').value = "";
+                document.getElementById('inputPelayananHarian').value = "";
             }
-        });
+        }
 
         document.getElementById('formHarian').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -409,14 +487,74 @@
 
             if (useFirebase) {
                 db.collection("harian").add({ tanggal, nama, layanan, sarana, pelayanan, total })
-                .then(() => { tutupFormHarian(); Swal.fire({ icon: 'success', title: 'Tersimpan (Online)!', text: 'Data masuk Firebase.', timer: 1500, showConfirmButton: false }); });
+                .then(() => { tutupFormHarian(); Swal.fire({ icon: 'success', title: 'Tersimpan!', text: 'Data masuk database.', timer: 1500, showConfirmButton: false }); });
             } else {
-                // Simpan Offline
                 dataHarian.push({ tanggal, nama, layanan, sarana, pelayanan, total });
                 tutupFormHarian(); renderHarianUI();
-                Swal.fire({ icon: 'success', title: 'Tersimpan (Offline)', text: 'Data tersimpan di browser ini.', timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'Tersimpan (Offline)', text: 'Data tersimpan di browser.', timer: 1500, showConfirmButton: false });
             }
         });
+
+        document.getElementById('formBulanan').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const bulan = document.getElementById('inputBulan').value;
+            const pasien = parseInt(document.getElementById('inputPasienBulanan').value);
+            const sarana = parseInt(document.getElementById('inputSaranaBulanan').value);
+            const pelayanan = parseInt(document.getElementById('inputPelayananBulanan').value);
+            const total = sarana + pelayanan;
+
+            if (useFirebase) {
+                db.collection("bulanan").doc(bulan).set({ bulan, pasien, sarana, pelayanan, total })
+                .then(() => { tutupFormBulanan(); Swal.fire({ icon: 'success', title: 'Tersimpan!', text: 'Data masuk database.', timer: 1500, showConfirmButton: false }); });
+            } else {
+                const index = dataBulanan.findIndex(i => i.bulan === bulan);
+                if(index !== -1) dataBulanan[index] = { bulan, pasien, sarana, pelayanan, total };
+                else dataBulanan.push({ bulan, pasien, sarana, pelayanan, total });
+                sortBulanan(); tutupFormBulanan(); renderBulananUI();
+                Swal.fire({ icon: 'success', title: 'Tersimpan (Offline)', text: 'Data tersimpan di browser.', timer: 1500, showConfirmButton: false });
+            }
+        });
+
+        document.getElementById('formLayanan').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const nama = document.getElementById('inputNamaLayanan').value;
+            const sarana = parseInt(document.getElementById('inputSaranaLayanan').value);
+            const pelayanan = parseInt(document.getElementById('inputPelayananLayanan').value);
+            
+            dataLayanan.push({ nama, sarana, pelayanan });
+            tutupFormLayanan();
+            renderLayananUI(); isiDropdownLayanan();
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Layanan baru ditambahkan.', timer: 1500, showConfirmButton: false });
+        });
+
+        function hapusLayanan(index) {
+            Swal.fire({
+                title: 'Hapus Layanan?', text: "Layanan ini akan dihapus dari daftar tarif.", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#EF4444', confirmButtonText: 'Ya, Hapus'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    dataLayanan.splice(index, 1);
+                    renderLayananUI(); isiDropdownLayanan();
+                }
+            });
+        }
+
+        document.getElementById('formPengaturan').addEventListener('submit', function(e) {
+            e.preventDefault();
+            localStorage.setItem('setNamaPkm', document.getElementById('setNamaPkm').value);
+            localStorage.setItem('setUser', document.getElementById('setUser').value);
+            localStorage.setItem('setPass', document.getElementById('setPass').value);
+            Swal.fire({ icon: 'success', title: 'Tersimpan!', text: 'Pengaturan berhasil diubah. Silakan login kembali.', timer: 2000, showConfirmButton: false })
+            .then(() => { location.reload(); });
+        });
+
+        // --- MODAL FUNCTIONS ---
+        function bukaFormBulanan() { document.getElementById('modalBulanan').style.display = 'block'; }
+        function tutupFormBulanan() { document.getElementById('modalBulanan').style.display = 'none'; document.getElementById('formBulanan').reset(); }
+        function bukaFormHarian() { document.getElementById('inputTanggal').valueAsDate = new Date(); document.getElementById('modalHarian').style.display = 'block'; }
+        function tutupFormHarian() { document.getElementById('modalHarian').style.display = 'none'; document.getElementById('formHarian').reset(); }
+        function bukaFormLayanan() { document.getElementById('modalLayanan').style.display = 'block'; }
+        function tutupFormLayanan() { document.getElementById('modalLayanan').style.display = 'none'; document.getElementById('formLayanan').reset(); }
 
         // --- EXPORT CSV ---
         function exportExcelBulanan() {
