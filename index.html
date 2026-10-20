@@ -5,13 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SI-RETRIBUSI | PKM Tering Seberang</title>
     
-    <!-- Library Eksternal -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -76,6 +74,8 @@
         .btn-primary { background: var(--primary); } .btn-primary:hover { background: var(--primary-dark); }
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
+        .btn-warning { background: #F59E0B; color: #000; } .btn-warning:hover { background: #D97706; }
+        .btn-secondary { background: var(--secondary); }
         
         .table-responsive { overflow-x: auto; max-height: 400px; }
         table { width: 100%; border-collapse: collapse; }
@@ -93,6 +93,21 @@
         .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
         .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #CBD5E1; border-radius: 8px; outline: none; }
         .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
+
+        /* --- PRINT STYLES (KHUSUS UNTUK CETAK INVOICE & LAPORAN) --- */
+        @media print {
+            body * { visibility: hidden; }
+            #invoice-area, #invoice-area * { visibility: visible; }
+            #invoice-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; box-shadow: none; }
+            .modal-buttons, .close { display: none !important; }
+            
+            /* Print Laporan Bulanan */
+            body.print-laporan .sidebar, body.print-laporan .topbar, body.print-laporan .btn, body.print-laporan .summary-cards, body.print-laporan #tab-harian, body.print-laporan #tab-layanan, body.print-laporan #tab-pengaturan, body.print-laporan canvas { display: none !important; }
+            body.print-laporan .main-content { overflow: visible; }
+            body.print-laporan #tab-dashboard { display: block !important; visibility: visible; padding: 0; }
+            body.print-laporan #tab-dashboard * { visibility: visible; }
+            body.print-laporan .section-box { box-shadow: none; border: none; }
+        }
     </style>
 </head>
 <body>
@@ -148,12 +163,14 @@
                     <div class="card"><div class="card-icon bg-orange"><i class="fa-solid fa-chart-line"></i></div><div class="card-info"><h3>Rata-rata per Bulan</h3><p id="rata-rata">Rp 0</p></div></div>
                 </div>
                 <div class="section-box"><div class="section-header"><h3>Grafik Penerimaan Bulanan</h3></div><canvas id="chart-penerimaan"></canvas></div>
+                
                 <div class="section-box">
                     <div class="section-header">
                         <h3>Rekap Data Bulanan</h3>
                         <div>
-                            <button class="btn btn-primary" onclick="bukaFormBulanan()"><i class="fa-solid fa-plus"></i> Tambah</button>
+                            <button class="btn btn-primary" onclick="bukaFormBulanan()"><i class="fa-solid fa-plus"></i> Tambah Manual</button>
                             <button class="btn btn-success" onclick="exportExcelBulanan()"><i class="fa-solid fa-file-excel"></i> Export</button>
+                            <button class="btn btn-secondary" onclick="cetakLaporan()"><i class="fa-solid fa-print"></i> Cetak Laporan</button>
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -168,17 +185,23 @@
                     <div class="section-header">
                         <h3>Log Transaksi Harian</h3>
                         <div>
+                            <input type="file" id="fileImport" accept=".csv" style="display: none;" onchange="importCSV(event)">
+                            <button class="btn btn-secondary" onclick="document.getElementById('fileImport').click()"><i class="fa-solid fa-file-import"></i> Import CSV</button>
                             <button class="btn btn-primary" onclick="bukaFormHarian()"><i class="fa-solid fa-plus"></i> Input Pasien</button>
+                            <button class="btn btn-warning" onclick="sinkronisasiBulanan()"><i class="fa-solid fa-rotate"></i> Sinkron ke Bulanan</button>
                             <button class="btn btn-success" onclick="exportExcelHarian()"><i class="fa-solid fa-file-excel"></i> Export</button>
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table><thead><tr><th>Tanggal</th><th>Nama Pasien</th><th>Layanan</th><th>Jasa Sarana</th><th>Jasa Pelayanan</th><th>Total</th></tr></thead><tbody id="tbody-harian"></tbody></table>
+                        <table>
+                            <thead><tr><th>Tanggal</th><th>Nama Pasien</th><th>Layanan</th><th>Jasa Sarana</th><th>Jasa Pelayanan</th><th>Total</th><th>Aksi</th></tr></thead>
+                            <tbody id="tbody-harian"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
-            <!-- TAB MASTER LAYANAN (BARU) -->
+            <!-- TAB MASTER LAYANAN -->
             <div id="tab-layanan" class="tab-content">
                 <div class="section-box">
                     <div class="section-header">
@@ -196,7 +219,7 @@
                 </div>
             </div>
 
-            <!-- TAB PENGATURAN (BARU) -->
+            <!-- TAB PENGATURAN -->
             <div id="tab-pengaturan" class="tab-content">
                 <div class="section-box">
                     <div class="section-header"><h3>Pengaturan Aplikasi</h3></div>
@@ -241,7 +264,7 @@
         </div>
     </div>
 
-    <!-- MODAL HARIAN (DENGAN DROPDOWN LAYANAN) -->
+    <!-- MODAL HARIAN -->
     <div id="modalHarian" class="modal">
         <div class="modal-content">
             <div class="modal-header"><h4>Input Data Harian</h4><span class="close" onclick="tutupFormHarian()">&times;</span></div>
@@ -271,6 +294,54 @@
                 <div class="form-group"><label>Jasa Pelayanan (Rp)</label><input type="number" id="inputPelayananLayanan" required min="0"></div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Simpan Layanan</button>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL INVOICE (STRUK) -->
+    <div id="modalInvoice" class="modal">
+        <div class="modal-content" id="invoice-area" style="max-width: 400px; font-family: monospace;">
+            <div style="text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 15px;">
+                <img src="logo.png" style="width: 60px; margin-bottom: 5px;">
+                <h3 id="inv-nama-pkm" style="font-size: 1.1rem; margin: 0;">PUSKESMAS</h3>
+                <p style="font-size: 0.8rem; margin: 0;">Bukti Pembayaran Retribusi</p>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px;">
+                <span>No. Invoice:</span>
+                <span id="inv-no">INV-001</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px;">
+                <span>Tanggal:</span>
+                <span id="inv-tanggal">-</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px;">
+                <span>Nama Pasien:</span>
+                <span id="inv-nama">-</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 15px;">
+                <span>Layanan:</span>
+                <span id="inv-layanan">-</span>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 10px;">
+                <tr style="border-bottom: 1px dashed #000;"><th style="text-align:left; padding-bottom: 5px;">Deskripsi</th><th style="text-align:right; padding-bottom: 5px;">Nominal</th></tr>
+                <tr><td style="padding: 5px 0;">Jasa Sarana</td><td style="text-align:right;" id="inv-sarana">Rp 0</td></tr>
+                <tr><td style="padding: 5px 0;">Jasa Pelayanan</td><td style="text-align:right;" id="inv-pelayanan">Rp 0</td></tr>
+            </table>
+
+            <div style="border-top: 2px dashed #000; padding-top: 10px; display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: bold; margin-bottom: 15px;">
+                <span>TOTAL:</span>
+                <span id="inv-total">Rp 0</span>
+            </div>
+
+            <div style="text-align: center; font-size: 0.8rem; margin-bottom: 20px;">
+                Terima kasih atas kunjungan Anda.<br>Semoga lekas sembuh.
+            </div>
+
+            <div class="modal-buttons" style="text-align: center;">
+                <button class="btn btn-secondary" onclick="tutupInvoice()" style="margin-right: 10px;">Tutup</button>
+                <button class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Cetak Struk</button>
+            </div>
         </div>
     </div>
 
@@ -304,7 +375,6 @@
             { bulan: "Desember", pasien: 182, sarana: 7130100, pelayanan: 4753400, total: 11883500 }
         ];
 
-        // Data Layanan Default
         const defaultLayanan = [
             { id: 1, nama: "Pengobatan Umum", sarana: 8100, pelayanan: 5400 },
             { id: 2, nama: "KIA / Kebidanan", sarana: 15000, pelayanan: 10000 },
@@ -316,7 +386,6 @@
         let dataLayanan = JSON.parse(localStorage.getItem('masterLayananPKM')) || [...defaultLayanan];
         let chartInstance = null;
 
-        // Terapkan Pengaturan (Nama PKM & Akun)
         const setNama = localStorage.getItem('setNamaPkm') || "Sistem Informasi Retribusi PKM Tering Seberang";
         const setUser = localStorage.getItem('setUser') || "admin";
         const setPass = localStorage.getItem('setPass') || "123";
@@ -326,9 +395,10 @@
         document.getElementById('setUser').value = setUser;
         document.getElementById('setPass').value = setPass;
         document.title = "SI-RETRIBUSI | " + setNama;
+        document.getElementById('inv-nama-pkm').innerText = setNama;
 
         // ==========================================
-        // 2. LOGIKA LOGIN
+        // 2. LOGIKA LOGIN & INISIALISASI
         // ==========================================
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault(); 
@@ -349,9 +419,6 @@
             .then((result) => { if (result.isConfirmed) location.reload(); });
         }
 
-        // ==========================================
-        // 3. INISIALISASI APLIKASI
-        // ==========================================
         function initApp() {
             if (useFirebase) {
                 db.collection("bulanan").onSnapshot((snapshot) => {
@@ -379,15 +446,11 @@
             dataBulanan.sort((a, b) => urutan.indexOf(a.bulan) - urutan.indexOf(b.bulan));
         }
 
-        // ==========================================
-        // 4. NAVIGASI TAB
-        // ==========================================
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.sidebar-menu li').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tabName).classList.add('active');
             event.currentTarget.classList.add('active');
-            
             const titles = { 'dashboard': 'Dashboard Retribusi', 'harian': 'Log Data Harian Pasien', 'layanan': 'Master Tarif Layanan', 'pengaturan': 'Pengaturan Sistem' };
             document.getElementById('page-title').innerText = titles[tabName];
         }
@@ -395,7 +458,7 @@
         const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
 
         // ==========================================
-        // 5. RENDER DATA
+        // 3. RENDER UI
         // ==========================================
         function renderBulananUI() {
             const totalPenerimaan = dataBulanan.reduce((acc, item) => acc + item.total, 0);
@@ -427,10 +490,21 @@
             const tbody = document.getElementById('tbody-harian');
             tbody.innerHTML = '';
             if(dataHarian.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#94A3B8;">Belum ada transaksi harian.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#94A3B8;">Belum ada transaksi harian.</td></tr>';
             } else {
-                dataHarian.forEach(item => {
-                    tbody.innerHTML += `<tr><td>${item.tanggal}</td><td>${item.nama}</td><td><span style="background:#E2E8F0; padding:4px 8px; border-radius:4px; font-size:0.8rem;">${item.layanan}</span></td><td>${formatRupiah(item.sarana)}</td><td>${formatRupiah(item.pelayanan)}</td><td><strong>${formatRupiah(item.total)}</strong></td></tr>`;
+                dataHarian.forEach((item, index) => {
+                    tbody.innerHTML += `<tr>
+                        <td>${item.tanggal}</td>
+                        <td>${item.nama}</td>
+                        <td><span style="background:#E2E8F0; padding:4px 8px; border-radius:4px; font-size:0.8rem;">${item.layanan}</span></td>
+                        <td>${formatRupiah(item.sarana)}</td>
+                        <td>${formatRupiah(item.pelayanan)}</td>
+                        <td><strong>${formatRupiah(item.total)}</strong></td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem; margin-right: 5px;" onclick="cetakInvoice(${index})"><i class="fa-solid fa-print"></i></button>
+                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.8rem;" onclick="hapusHarian('${item.id || index}', ${index})"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>`;
                 });
             }
             if (!useFirebase) localStorage.setItem('dataHarianPKM', JSON.stringify(dataHarian));
@@ -445,7 +519,7 @@
                     <td>${formatRupiah(item.sarana)}</td>
                     <td>${formatRupiah(item.pelayanan)}</td>
                     <td><span style="color: var(--primary); font-weight: bold;">${formatRupiah(item.sarana + item.pelayanan)}</span></td>
-                    <td><button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.8rem;" onclick="hapusLayanan(${index})">Hapus</button></td>
+                    <td><button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.8rem;" onclick="hapusLayanan(${index})"><i class="fa-solid fa-trash"></i></button></td>
                 </tr>`;
             });
             localStorage.setItem('masterLayananPKM', JSON.stringify(dataLayanan));
@@ -460,10 +534,142 @@
         }
 
         // ==========================================
+        // 4. FITUR CETAK & INVOICE & IMPORT
+        // ==========================================
+        function cetakInvoice(index) {
+            const item = dataHarian[index];
+            document.getElementById('inv-no').innerText = 'INV-' + (1000 + index);
+            document.getElementById('inv-tanggal').innerText = item.tanggal;
+            document.getElementById('inv-nama').innerText = item.nama;
+            document.getElementById('inv-layanan').innerText = item.layanan;
+            document.getElementById('inv-sarana').innerText = formatRupiah(item.sarana);
+            document.getElementById('inv-pelayanan').innerText = formatRupiah(item.pelayanan);
+            document.getElementById('inv-total').innerText = formatRupiah(item.total);
+            
+            document.getElementById('modalInvoice').style.display = 'block';
+        }
+
+        function tutupInvoice() {
+            document.getElementById('modalInvoice').style.display = 'none';
+        }
+
+        function cetakLaporan() {
+            document.body.classList.add('print-laporan');
+            window.print();
+            // Hapus class setelah print dialog ditutup
+            setTimeout(() => { document.body.classList.remove('print-laporan'); }, 1000);
+        }
+
+        function importCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n');
+                let importedCount = 0;
+
+                // Asumsi CSV: Tanggal,Nama,Layanan,Sarana,Pelayanan
+                for(let i=1; i<rows.length; i++) { // Lewati baris 1 (Header)
+                    if(!rows[i].trim()) continue;
+                    
+                    let cols = rows[i].split(',');
+                    if(cols.length >= 5) {
+                        let tanggal = cols[0].trim();
+                        let nama = cols[1].trim();
+                        let layanan = cols[2].trim();
+                        let sarana = parseInt(cols[3].trim());
+                        let pelayanan = parseInt(cols[4].trim());
+                        
+                        if(nama && !isNaN(sarana) && !isNaN(pelayanan)) {
+                            let total = sarana + pelayanan;
+                            dataHarian.push({ tanggal, nama, layanan, sarana, pelayanan, total });
+                            importedCount++;
+                        }
+                    }
+                }
+
+                renderHarianUI();
+                Swal.fire('Sukses!', `${importedCount} data berhasil diimport.`, 'success');
+                event.target.value = ''; // Reset input file
+            };
+            reader.readAsText(file);
+        }
+
+        // ==========================================
+        // 5. FITUR SINKRONISASI & HAPUS
+        // ==========================================
+        function hapusHarian(id, index) {
+            Swal.fire({
+                title: 'Hapus Data Pasien?', text: "Data yang dihapus tidak bisa dikembalikan.", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#EF4444', confirmButtonText: 'Ya, Hapus'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    if (useFirebase) {
+                        db.collection("harian").doc(id).delete().then(() => {
+                            Swal.fire('Terhapus!', 'Data berhasil dihapus dari database.', 'success');
+                        });
+                    } else {
+                        dataHarian.splice(index, 1);
+                        renderHarianUI();
+                        Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
+                    }
+                }
+            });
+        }
+
+        function sinkronisasiBulanan() {
+            if(dataHarian.length === 0) {
+                Swal.fire('Info', 'Belum ada data harian untuk disinkronisasi.', 'info');
+                return;
+            }
+            
+            Swal.fire({
+                title: 'Sinkronisasi Data?',
+                text: "Data Bulanan akan dihitung ulang otomatis berdasarkan data harian yang sudah diinput. Data bulanan lama akan tertimpa.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Sinkronkan!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if(result.isConfirmed) {
+                    const urutan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                    let rekapBaru = {};
+
+                    // Looping semua data harian
+                    dataHarian.forEach(item => {
+                        let tgl = new Date(item.tanggal);
+                        let namaBulan = urutan[tgl.getMonth()]; 
+                        
+                        if(!rekapBaru[namaBulan]) {
+                            rekapBaru[namaBulan] = { bulan: namaBulan, pasien: 0, sarana: 0, pelayanan: 0, total: 0 };
+                        }
+                        rekapBaru[namaBulan].pasien += 1;
+                        rekapBaru[namaBulan].sarana += item.sarana;
+                        rekapBaru[namaBulan].pelayanan += item.pelayanan;
+                        rekapBaru[namaBulan].total += item.total;
+                    });
+
+                    let arrayBaru = Object.values(rekapBaru);
+                    arrayBaru.sort((a, b) => urutan.indexOf(a.bulan) - urutan.indexOf(b.bulan));
+
+                    if (useFirebase) {
+                        arrayBaru.forEach(item => db.collection("bulanan").doc(item.bulan).set(item));
+                    } else {
+                        dataBulanan = arrayBaru;
+                        localStorage.setItem('dataBulananPKM', JSON.stringify(dataBulanan));
+                    }
+                    
+                    if(!useFirebase) renderBulananUI();
+                    Swal.fire('Berhasil!', 'Data bulanan berhasil diperbarui dari log harian.', 'success');
+                }
+            });
+        }
+
+        // ==========================================
         // 6. FORM SUBMISSIONS
         // ==========================================
-        
-        // Auto Fill Tarif saat layanan dipilih
         function autoFillTarif() {
             const select = document.getElementById('inputLayanan');
             const selectedOption = select.options[select.selectedIndex];
