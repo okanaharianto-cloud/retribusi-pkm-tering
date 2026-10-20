@@ -1,4 +1,18 @@
-// Data Default Bulanan
+// ==========================================
+// 1. KONFIGURASI FIREBASE (GANTI DENGAN PUNYA ANDA)
+// ==========================================
+const firebaseConfig = {
+    // HAPUS BARIS INI DAN PASTE KODE CONFIG DARI FIREBASE ANDA DI SINI
+    // Contoh: apiKey: "AIzaSy...", authDomain: "si-retribusi...", dst.
+};
+
+// Inisialisasi Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ==========================================
+// 2. DATA DEFAULT & VARIABEL GLOBAL
+// ==========================================
 const dataDefaultBulanan = [
     { bulan: "Januari", pasien: 115, sarana: 3528300, pelayanan: 2352200, total: 5880500 },
     { bulan: "Februari", pasien: 110, sarana: 3665100, pelayanan: 2443400, total: 6108500 },
@@ -14,24 +28,22 @@ const dataDefaultBulanan = [
     { bulan: "Desember", pasien: 182, sarana: 7130100, pelayanan: 4753400, total: 11883500 }
 ];
 
-let dataBulanan = JSON.parse(localStorage.getItem('dataRetribusiBulananPKM')) || [...dataDefaultBulanan];
-let dataHarian = JSON.parse(localStorage.getItem('dataRetribusiHarianPKM')) || [];
+let dataBulanan = [];
+let dataHarian = [];
 let chartInstance = null;
 
 // --- LOGIN LOGIC ---
 document.getElementById('login-form').addEventListener('submit', function(e) {
     e.preventDefault();
-    // Ambil nilai input dan hapus spasi yang tidak sengaja diketik
     const user = document.getElementById('username').value.trim();
     const pass = document.getElementById('password').value.trim();
     
     if(user === 'admin' && pass === '123') {
-        // Jika berhasil, sembunyikan login dan tampilkan aplikasi
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('app-screen').style.display = 'flex';
-        initApp(); // Jalankan fungsi memuat data
+        initApp(); // Mulai tarik data dari Firebase
     } else {
-        Swal.fire('Akses Ditolak', 'Username atau Password salah! Pastikan Anda mengetik: admin / 123', 'error');
+        Swal.fire('Akses Ditolak', 'Username atau Password salah! Pastikan: admin / 123', 'error');
     }
 });
 
@@ -44,34 +56,54 @@ function logout() {
         confirmButtonColor: '#EF4444',
         confirmButtonText: 'Ya, Keluar'
     }).then((result) => {
-        if (result.isConfirmed) {
-            location.reload(); // Muat ulang halaman
-        }
+        if (result.isConfirmed) { location.reload(); }
     });
 }
 
 function initApp() {
-    renderBulanan();
-    renderHarian();
+    tarikDataBulanan();
+    tarikDataHarian();
 }
 
 // --- NAVIGASI TAB ---
 function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.sidebar-menu li').forEach(el => el.classList.remove('active'));
-    
     document.getElementById('tab-' + tabName).classList.add('active');
     event.currentTarget.classList.add('active');
-    
     document.getElementById('page-title').innerText = tabName === 'dashboard' ? 'Dashboard Retribusi' : 
                                                       tabName === 'harian' ? 'Log Data Harian Pasien' : 'Pengaturan Sistem';
 }
 
-// --- FORMAT RUPIAH ---
 const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
 
-// --- RENDER BULANAN ---
-function renderBulanan() {
+// ==========================================
+// 3. LOGIKA FIREBASE: TARIK DATA BULANAN
+// ==========================================
+function tarikDataBulanan() {
+    db.collection("bulanan").onSnapshot((snapshot) => {
+        // Jika database di Firebase masih kosong, otomatis isi dengan data Excel awal
+        if (snapshot.empty) {
+            dataDefaultBulanan.forEach(item => {
+                db.collection("bulanan").doc(item.bulan).set(item);
+            });
+            return;
+        }
+
+        dataBulanan = [];
+        snapshot.forEach((doc) => {
+            dataBulanan.push(doc.data());
+        });
+
+        // Urutkan berdasarkan bulan
+        const urutanBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        dataBulanan.sort((a, b) => urutanBulan.indexOf(a.bulan) - urutanBulan.indexOf(b.bulan));
+
+        renderBulananUI();
+    });
+}
+
+function renderBulananUI() {
     const totalPenerimaan = dataBulanan.reduce((acc, item) => acc + item.total, 0);
     const totalPasien = dataBulanan.reduce((acc, item) => acc + item.pasien, 0);
     const rataRata = dataBulanan.length > 0 ? totalPenerimaan / dataBulanan.length : 0;
@@ -84,10 +116,8 @@ function renderBulanan() {
     tbody.innerHTML = ''; 
     dataBulanan.forEach(item => {
         tbody.innerHTML += `<tr>
-            <td><strong>${item.bulan}</strong></td>
-            <td>${item.pasien}</td>
-            <td>${formatRupiah(item.sarana)}</td>
-            <td>${formatRupiah(item.pelayanan)}</td>
+            <td><strong>${item.bulan}</strong></td><td>${item.pasien}</td>
+            <td>${formatRupiah(item.sarana)}</td><td>${formatRupiah(item.pelayanan)}</td>
             <td style="color: #10B981; font-weight: bold;">${formatRupiah(item.total)}</td>
         </tr>`;
     });
@@ -99,62 +129,58 @@ function renderBulanan() {
         data: {
             labels: dataBulanan.map(item => item.bulan),
             datasets: [{
-                label: 'Penerimaan (Rp)',
-                data: dataBulanan.map(item => item.total),
-                backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                borderColor: '#2563EB',
-                borderWidth: 3,
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#2563EB',
-                pointRadius: 5,
-                fill: true,
-                tension: 0.4
+                label: 'Penerimaan (Rp)', data: dataBulanan.map(item => item.total),
+                backgroundColor: 'rgba(37, 99, 235, 0.1)', borderColor: '#2563EB',
+                borderWidth: 3, pointBackgroundColor: '#fff', pointBorderColor: '#2563EB',
+                pointRadius: 5, fill: true, tension: 0.4
             }]
         },
-        options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5] } } }
-        }
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
     });
-
-    localStorage.setItem('dataRetribusiBulananPKM', JSON.stringify(dataBulanan));
 }
 
-// --- RENDER HARIAN ---
-function renderHarian() {
+// ==========================================
+// 4. LOGIKA FIREBASE: TARIK DATA HARIAN
+// ==========================================
+function tarikDataHarian() {
+    db.collection("harian").orderBy("tanggal", "desc").onSnapshot((snapshot) => {
+        dataHarian = [];
+        snapshot.forEach((doc) => {
+            let data = doc.data();
+            data.id = doc.id; // Simpan ID dokumen untuk fitur hapus
+            dataHarian.push(data);
+        });
+        renderHarianUI();
+    });
+}
+
+function renderHarianUI() {
     const tbody = document.getElementById('tbody-harian');
     tbody.innerHTML = '';
-    dataHarian.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
 
     if(dataHarian.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#94A3B8;">Belum ada transaksi harian.</td></tr>';
     } else {
         dataHarian.forEach(item => {
             tbody.innerHTML += `<tr>
-                <td>${item.tanggal}</td>
-                <td>${item.nama}</td>
+                <td>${item.tanggal}</td><td>${item.nama}</td>
                 <td><span style="background:#E2E8F0; padding:4px 8px; border-radius:4px; font-size:0.8rem;">${item.layanan}</span></td>
-                <td>${formatRupiah(item.sarana)}</td>
-                <td>${formatRupiah(item.pelayanan)}</td>
+                <td>${formatRupiah(item.sarana)}</td><td>${formatRupiah(item.pelayanan)}</td>
                 <td><strong>${formatRupiah(item.total)}</strong></td>
             </tr>`;
         });
     }
-    localStorage.setItem('dataRetribusiHarianPKM', JSON.stringify(dataHarian));
 }
 
 // --- MODAL FUNCTIONS ---
 function bukaFormBulanan() { document.getElementById('modalBulanan').style.display = 'block'; }
 function tutupFormBulanan() { document.getElementById('modalBulanan').style.display = 'none'; document.getElementById('formBulanan').reset(); }
-
-function bukaFormHarian() { 
-    document.getElementById('inputTanggal').valueAsDate = new Date();
-    document.getElementById('modalHarian').style.display = 'block'; 
-}
+function bukaFormHarian() { document.getElementById('inputTanggal').valueAsDate = new Date(); document.getElementById('modalHarian').style.display = 'block'; }
 function tutupFormHarian() { document.getElementById('modalHarian').style.display = 'none'; document.getElementById('formHarian').reset(); }
 
-// --- SUBMIT DATA ---
+// ==========================================
+// 5. LOGIKA FIREBASE: SIMPAN DATA
+// ==========================================
 document.getElementById('formBulanan').addEventListener('submit', function(e) {
     e.preventDefault();
     const bulan = document.getElementById('inputBulan').value;
@@ -163,19 +189,13 @@ document.getElementById('formBulanan').addEventListener('submit', function(e) {
     const pelayanan = parseInt(document.getElementById('inputPelayananBulanan').value);
     const total = sarana + pelayanan;
 
-    const indexBulan = dataBulanan.findIndex(item => item.bulan === bulan);
-    if (indexBulan !== -1) {
-        dataBulanan[indexBulan] = { bulan, pasien, sarana, pelayanan, total };
-    } else {
-        dataBulanan.push({ bulan, pasien, sarana, pelayanan, total });
-    }
-
-    const urutanBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    dataBulanan.sort((a, b) => urutanBulan.indexOf(a.bulan) - urutanBulan.indexOf(b.bulan));
-
-    tutupFormBulanan();
-    renderBulanan();
-    Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Data bulanan telah diperbarui.', timer: 1500, showConfirmButton: false });
+    // Simpan ke Firebase (Timpa jika bulan sudah ada)
+    db.collection("bulanan").doc(bulan).set({
+        bulan: bulan, pasien: pasien, sarana: sarana, pelayanan: pelayanan, total: total
+    }).then(() => {
+        tutupFormBulanan();
+        Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Data bulanan tersimpan ke Database.', timer: 1500, showConfirmButton: false });
+    });
 });
 
 document.getElementById('formHarian').addEventListener('submit', function(e) {
@@ -187,46 +207,33 @@ document.getElementById('formHarian').addEventListener('submit', function(e) {
     const pelayanan = parseInt(document.getElementById('inputPelayananHarian').value);
     const total = sarana + pelayanan;
 
-    dataHarian.push({ tanggal, nama, layanan, sarana, pelayanan, total });
-    tutupFormHarian();
-    renderHarian();
-    Swal.fire({ icon: 'success', title: 'Tersimpan!', text: 'Data pasien berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
+    // Tambah dokumen baru ke Firebase
+    db.collection("harian").add({
+        tanggal: tanggal, nama: nama, layanan: layanan, sarana: sarana, pelayanan: pelayanan, total: total
+    }).then(() => {
+        tutupFormHarian();
+        Swal.fire({ icon: 'success', title: 'Tersimpan!', text: 'Data pasien masuk ke Database.', timer: 1500, showConfirmButton: false });
+    });
 });
 
-// --- EXPORT & RESET ---
+// --- EXPORT CSV ---
 function exportExcelBulanan() {
     let csv = "data:text/csv;charset=utf-8,Bulan,Jumlah Pasien,Jasa Sarana (Rp),Jasa Pelayanan (Rp),Total (Rp)\n";
     dataBulanan.forEach(r => csv += `"${r.bulan}",${r.pasien},${r.sarana},${r.pelayanan},${r.total}\n`);
     downloadCSV(csv, "Rekap_Bulanan_PKM.csv");
 }
-
 function exportExcelHarian() {
     let csv = "data:text/csv;charset=utf-8,Tanggal,Nama Pasien,Layanan,Jasa Sarana (Rp),Jasa Pelayanan (Rp),Total (Rp)\n";
     dataHarian.forEach(r => csv += `"${r.tanggal}","${r.nama}","${r.layanan}",${r.sarana},${r.pelayanan},${r.total}\n`);
     downloadCSV(csv, "Data_Harian_PKM.csv");
 }
-
 function downloadCSV(csv, fileName) {
     var link = document.createElement("a");
     link.setAttribute("href", encodeURI(csv));
     link.setAttribute("download", fileName);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
 }
 
 function resetAllData() {
-    Swal.fire({
-        title: 'Hapus Semua Data?',
-        text: "Data bulanan dan harian akan dihapus permanen!",
-        icon: 'error',
-        showCancelButton: true,
-        confirmButtonColor: '#EF4444',
-        confirmButtonText: 'Ya, Hapus Semua'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            localStorage.clear();
-            location.reload();
-        }
-    });
+    Swal.fire({ title: 'Fitur dinonaktifkan', text: "Untuk keamanan data online, hapus data dilakukan langsung melalui Dashboard Firebase.", icon: 'info' });
 }
