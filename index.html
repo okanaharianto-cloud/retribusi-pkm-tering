@@ -77,6 +77,7 @@
         .card-icon { width: 60px; height: 60px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 1.8rem; color: white; }
         .bg-blue { background: linear-gradient(135deg, #3B82F6, #2563EB); }
         .bg-green { background: linear-gradient(135deg, #10B981, #059669); }
+        .bg-orange { background: linear-gradient(135deg, #F59E0B, #D97706); }
         .card-info h3 { font-size: 0.9rem; color: var(--secondary); margin-bottom: 5px; }
         .card-info p { font-size: 1.5rem; font-weight: 700; color: var(--bg-sidebar); }
 
@@ -142,7 +143,7 @@
                         <h3>Data Uraian Harian (Format Excel)</h3>
                         <div>
                             <input type="file" id="fileImport" accept=".csv" style="display: none;" onchange="importCSV(event)">
-                            <button class="btn btn-secondary" onclick="document.getElementById('fileImport').click()"><i class="fa-solid fa-file-import"></i> Import CSV</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('fileImport').click()"><i class="fa-solid fa-file-import"></i> Import CSV (Auto)</button>
                             <button class="btn btn-primary" onclick="bukaForm()"><i class="fa-solid fa-plus"></i> Input Pasien Baru</button>
                             <button class="btn btn-success" onclick="exportPersisExcel()"><i class="fa-solid fa-file-excel"></i> Export Persis Excel</button>
                             <button class="btn btn-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i> Print PDF</button>
@@ -179,8 +180,6 @@
                     <div class="section-header">
                         <h3>Rekap Data Bulanan</h3>
                         <div>
-                            <button class="btn btn-secondary" onclick="document.getElementById('fileImportBulanan').click()"><i class="fa-solid fa-file-import"></i> Import Rincian</button>
-                            <input type="file" id="fileImportBulanan" accept=".csv" style="display: none;" onchange="importBulanan(event)">
                             <button class="btn btn-success" onclick="exportExcelBulanan()"><i class="fa-solid fa-file-excel"></i> Export Excel</button>
                         </div>
                     </div>
@@ -354,7 +353,7 @@
         });
 
         // ==========================================
-        // FITUR IMPORT URAIAN HARIAN
+        // FITUR IMPORT CSV AUTO-DETECT (SUPER CERDAS)
         // ==========================================
         function importCSV(event) {
             const file = event.target.files[0];
@@ -363,172 +362,191 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 let text = e.target.result;
-                if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // Handle BOM
+                if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+                const upperText = text.toUpperCase();
 
-                // Cek apakah file adalah URAIAN HARIAN
-                if (!text.toUpperCase().includes('NAMA PASIEN') || !text.toUpperCase().includes('THERAPY')) {
-                    Swal.fire('Format Salah', 'File yang Anda upload bukan URAIAN HARIAN. Pastikan menggunakan file yang benar.', 'error');
-                    event.target.value = '';
-                    return;
-                }
-
-                const lines = text.split(/\r?\n/);
-                let importedData = [];
-                let currentPatient = null;
-                let isValidData = false;
-
-                const parseDate = (dateStr) => {
-                    if(!dateStr) return '';
-                    let parts = dateStr.split('/');
-                    if (parts.length === 3) {
-                        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-                    }
-                    return new Date().toISOString().split('T')[0];
-                };
-
+                // Helper Pembersih Uang
                 const cleanCurrency = (str) => {
                     if (!str) return 0;
                     let cleaned = str.toString().replace(/[^0-9]/g, ''); 
                     return parseInt(cleaned) || 0;
                 };
 
-                // Parser CSV Super Cerdas (Handle koma di dalam tanda kutip)
-                const parseCSVLine = (line) => {
-                    let result = []; let cur = ''; let inQuotes = false;
-                    for (let i = 0; i < line.length; i++) {
-                        let char = line[i];
-                        if (char === '"') { inQuotes = !inQuotes; } 
-                        else if (char === ',' && !inQuotes) { result.push(cur.trim()); cur = ''; } 
-                        else { cur += char; }
-                    }
-                    result.push(cur.trim());
-                    return result;
-                };
+                // ==========================================
+                // DETEKSI 1: RINCIAN PEMBAGIAN RET (Bulanan Sederhana)
+                // ==========================================
+                if (upperText.includes('RINCIAN PEMBAGIAN') || (upperText.includes('BULAN') && upperText.includes('JASA SARANA') && !upperText.includes('THERAPY'))) {
+                    const lines = text.split(/\r?\n/);
+                    let importedBulanan = [];
+                    let isData = false;
 
-                for (let i = 0; i < lines.length; i++) {
-                    let line = lines[i];
-                    if(!line.trim()) continue;
+                    for (let i = 0; i < lines.length; i++) {
+                        let line = lines[i].trim();
+                        if (!line) continue;
 
-                    let upperLine = line.toUpperCase();
-                    
-                    // Cari baris header
-                    if (upperLine.includes('NAMA PASIEN') && upperLine.includes('THERAPY')) {
-                        isValidData = true; 
-                        continue;
-                    }
-
-                    // Hentikan jika sudah masuk area JUMLAH
-                    if (isValidData && (upperLine.startsWith('JUMLAH') || upperLine.startsWith('KUNJUNGAN') || upperLine.startsWith('SARANA'))) {
-                        break; 
-                    }
-
-                    if (!isValidData) continue;
-
-                    let cols = parseCSVLine(line);
-                    if(cols.length < 9) continue;
-
-                    let tanggalStr = cols[0];
-                    let nama = cols[2] || '';
-                    let alamat = cols[3] || '';
-                    let jenis = cols[4] || '';
-                    let therapy = cols[5] || '';
-                    let sarana = cleanCurrency(cols[7] || '');
-                    let pelayanan = cleanCurrency(cols[8] || '');
-
-                    // Abaikan baris subtotal harian (biasanya therapy kosong)
-                    if (!therapy) continue;
-
-                    // KUNCI: Jika tanggalStr ada isinya, ini Pasien BARU
-                    if (tanggalStr.includes('/')) {
-                        currentPatient = {
-                            id: Date.now() + Math.random(),
-                            tanggal: parseDate(tanggalStr),
-                            nama: nama,
-                            alamat: alamat,
-                            jenis: jenis,
-                            therapies: []
-                        };
-                        importedData.push(currentPatient);
+                        if (line.match(/^\d+,/) && line.toUpperCase().includes('RP')) {
+                            isData = true;
+                            let cols = line.split(',');
+                            if (cols.length >= 6) {
+                                let bulanRaw = cols[1].trim();
+                                let bulan = bulanRaw.charAt(0).toUpperCase() + bulanRaw.slice(1).toLowerCase(); 
+                                let pasien = parseInt(cols[2].trim()) || 0;
+                                let sarana = cleanCurrency(cols[3]);
+                                let pelayanan = cleanCurrency(cols[4]);
+                                let total = cleanCurrency(cols[5]);
+                                
+                                importedBulanan.push({ bulan, pasien, sarana, pelayanan, total });
+                            }
+                        } else if (isData && line.startsWith('TOTAL')) {
+                            break;
+                        }
                     }
 
-                    // Tambahkan Therapy ke pasien saat ini
-                    if (currentPatient && therapy) {
-                        currentPatient.therapies.push({
-                            nama: therapy,
-                            sarana: sarana,
-                            pelayanan: pelayanan,
-                            total: sarana + pelayanan
-                        });
+                    if (importedBulanan.length > 0) {
+                        dataBulanan = importedBulanan;
+                        localStorage.setItem('dataBulananPKM', JSON.stringify(dataBulanan));
+                        renderBulananUI();
+                        Swal.fire('Sukses!', `${importedBulanan.length} data Rekap Bulanan berhasil diimport. Silakan buka menu Dashboard Bulanan.`, 'success');
+                    } else {
+                        Swal.fire('Gagal', 'Format Rincian Pembagian Ret tidak dikenali.', 'error');
                     }
-                }
-
-                if (importedData.length > 0) {
-                    dataPasien = importedData; // Timpa data lama
-                    localStorage.setItem('dataUraianHarian', JSON.stringify(dataPasien));
-                    renderTabelHarian();
-                    Swal.fire('Sukses!', `${importedData.length} data pasien berhasil diimport.`, 'success');
-                } else {
-                    Swal.fire('Gagal', 'Data tidak ditemukan. Pastikan format file CSV Uraian Harian sesuai.', 'error');
-                }
-                event.target.value = ''; // Reset
-            };
-            reader.readAsText(file);
-        }
-
-        // ==========================================
-        // FITUR IMPORT BULANAN (RINCIAN)
-        // ==========================================
-        function importBulanan(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                let text = e.target.result;
-                if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-
-                if (!text.toUpperCase().includes('BULAN') || !text.toUpperCase().includes('JASA SARANA')) {
-                    Swal.fire('Format Salah', 'File ini bukan RINCIAN PEMBAGIAN RET.', 'error');
                     event.target.value = '';
                     return;
                 }
 
-                const lines = text.split(/\r?\n/);
-                let importedBulanan = [];
-                let isData = false;
-
-                for (let i = 0; i < lines.length; i++) {
-                    let line = lines[i].trim();
-                    if (!line) continue;
-
-                    if (line.match(/^\d+,/) && line.toUpperCase().includes('RP')) {
-                        isData = true;
-                        let cols = line.split(',');
-                        if (cols.length >= 6) {
-                            let bulanRaw = cols[1].trim();
-                            let bulan = bulanRaw.charAt(0).toUpperCase() + bulanRaw.slice(1).toLowerCase(); 
-                            let pasien = parseInt(cols[2].trim()) || 0;
-                            let sarana = parseInt(cols[3].replace(/[^0-9]/g, '')) || 0;
-                            let pelayanan = parseInt(cols[4].replace(/[^0-9]/g, '')) || 0;
-                            let total = parseInt(cols[5].replace(/[^0-9]/g, '')) || 0;
-                            
-                            if(bulan && !bulan.includes('BULAN')) {
-                                importedBulanan.push({ bulan, pasien, sarana, pelayanan, total });
-                            }
+                // ==========================================
+                // DETEKSI 2: RETRIBUSI PKM TERING (Total Lokasi)
+                // ==========================================
+                if (upperText.includes('TEMPAT PELAYANAN') && upperText.includes('TOTAL')) {
+                    const lines = text.split(/\r?\n/);
+                    let monthName = "Januari"; // default
+                    
+                    // Cari nama bulan
+                    for (let line of lines) {
+                        if(line.toUpperCase().includes('BULAN :')) {
+                            let parts = line.split(':');
+                            if(parts.length > 1) monthName = parts[1].split(',')[0].trim();
+                            break;
                         }
-                    } else if (isData && line.toUpperCase().startsWith('TOTAL')) {
-                        break;
                     }
+
+                    let sarana = 0, pelayanan = 0, total = 0, pasien = 0;
+                    let found = false;
+
+                    // Cari baris Total
+                    for (let line of lines) {
+                        if (line.trim().startsWith('Total,') || line.trim().startsWith('TOTAL,')) {
+                            let cols = line.split(',');
+                            // Cari kolom yang mengandung 'Rp'
+                            let rpValues = cols.filter(c => c.toUpperCase().includes('RP')).map(c => cleanCurrency(c));
+                            
+                            if(rpValues.length >= 3) {
+                                sarana = rpValues[0];
+                                pelayanan = rpValues[1];
+                                total = rpValues[2];
+                            }
+                            
+                            // Pasien biasanya di kolom ke 2 (Bayar) atau ke 9 (Total)
+                            pasien = parseInt(cols[2]) || parseInt(cols[9]) || 0;
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (found && total > 0) {
+                        // Timpa atau tambahkan ke dataBulanan
+                        let bulanCapitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1).toLowerCase();
+                        let indexBulan = dataBulanan.findIndex(i => i.bulan === bulanCapitalized);
+                        
+                        let dataBaru = { bulan: bulanCapitalized, pasien, sarana, pelayanan, total };
+                        
+                        if(indexBulan !== -1) dataBulanan[indexBulan] = dataBaru;
+                        else dataBulanan.push(dataBaru);
+
+                        const urutanBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                        dataBulanan.sort((a, b) => urutanBulan.indexOf(a.bulan) - urutanBulan.indexOf(b.bulan));
+
+                        localStorage.setItem('dataBulananPKM', JSON.stringify(dataBulanan));
+                        renderBulananUI();
+                        Swal.fire('Sukses!', `Data Rekap Bulan ${bulanCapitalized} berhasil diimport.`, 'success');
+                    } else {
+                        Swal.fire('Gagal', 'Baris Total tidak ditemukan di file ini.', 'error');
+                    }
+                    event.target.value = '';
+                    return;
                 }
 
-                if (importedBulanan.length > 0) {
-                    dataBulanan = importedBulanan;
-                    localStorage.setItem('dataBulananPKM', JSON.stringify(dataBulanan));
-                    renderBulananUI();
-                    Swal.fire('Sukses!', `${importedBulanan.length} data Rekap Bulanan berhasil diimport.`, 'success');
-                } else {
-                    Swal.fire('Gagal', 'Data tidak ditemukan di dalam file.', 'error');
+                // ==========================================
+                // DETEKSI 3: URAIAN HARIAN (Data Pasien)
+                // ==========================================
+                if (upperText.includes('NAMA PASIEN') && upperText.includes('THERAPY')) {
+                    const lines = text.split(/\r?\n/);
+                    let importedData = [];
+                    let currentPatient = null;
+                    let isHeaderFound = false;
+
+                    const parseCSVLine = (line) => {
+                        let result = []; let cur = ''; let inQuotes = false;
+                        for (let i = 0; i < line.length; i++) {
+                            let char = line[i];
+                            if (char === '"') { inQuotes = !inQuotes; } 
+                            else if (char === ',' && !inQuotes) { result.push(cur.trim()); cur = ''; } 
+                            else { cur += char; }
+                        }
+                        result.push(cur.trim());
+                        return result;
+                    };
+
+                    const parseDate = (dateStr) => {
+                        let parts = dateStr.split('/');
+                        if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                        return new Date().toISOString().split('T')[0];
+                    };
+
+                    for (let i = 0; i < lines.length; i++) {
+                        let line = lines[i];
+                        if(!line.trim()) continue;
+                        let upperLine = line.toUpperCase();
+                        
+                        if (upperLine.includes('NAMA PASIEN') && upperLine.includes('THERAPY')) { isHeaderFound = true; continue; }
+                        if (isHeaderFound && (upperLine.startsWith('JUMLAH') || upperLine.startsWith('KUNJUNGAN'))) { break; }
+                        if (!isHeaderFound) continue;
+
+                        let cols = parseCSVLine(line);
+                        if(cols.length < 9) continue;
+
+                        let tanggalStr = cols[0];
+                        let nama = cols[2] || '';
+                        let alamat = cols[3] || '';
+                        let jenis = cols[4] || '';
+                        let therapy = cols[5] || '';
+                        let sarana = cleanCurrency(cols[7] || '');
+                        let pelayanan = cleanCurrency(cols[8] || '');
+
+                        if (tanggalStr.includes('/')) {
+                            currentPatient = { id: Date.now() + Math.random(), tanggal: parseDate(tanggalStr), nama, alamat, jenis, therapies: [] };
+                            importedData.push(currentPatient);
+                        }
+
+                        if (currentPatient && therapy && !therapy.includes('NAMA OBAT')) {
+                            currentPatient.therapies.push({ nama: therapy, sarana, pelayanan, total: sarana + pelayanan });
+                        }
+                    }
+
+                    if (importedData.length > 0) {
+                        dataPasien = importedData; 
+                        localStorage.setItem('dataUraianHarian', JSON.stringify(dataPasien));
+                        renderTabelHarian();
+                        Swal.fire('Sukses!', `${importedData.length} data pasien berhasil diimport.`, 'success');
+                    } else {
+                        Swal.fire('Gagal', 'Data pasien tidak ditemukan di dalam file.', 'error');
+                    }
+                    event.target.value = '';
+                    return;
                 }
+
+                // JIKA TIDAK ADA YANG COCOK
+                Swal.fire('Gagal', 'Format CSV tidak dikenali. Pastikan file yang di-upload adalah format Excel dari PKM Tering.', 'error');
                 event.target.value = '';
             };
             reader.readAsText(file);
