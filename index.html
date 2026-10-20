@@ -69,9 +69,9 @@
                         <i class="fa-solid fa-chart-bar mr-2"></i> 3. Rekap Bulanan
                     </button>
                     <button onclick="document.getElementById('fileImport').click()" class="cursor-pointer bg-slate-700 hover:bg-slate-800 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
-                        <i class="fa-solid fa-file-import mr-2"></i> 4. Import Excel/CSV
+                        <i class="fa-solid fa-file-import mr-2"></i> 4. Import Excel/CSV/TXT
                     </button>
-                    <input type="file" id="fileImport" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleImportFile(event)">
+                    <input type="file" id="fileImport" accept=".xlsx,.xls,.csv,.txt" class="hidden" onchange="handleImportFile(event)">
                 </div>
             </section>
 
@@ -357,13 +357,19 @@
         const parseTanggalString = (str) => {
             if (!str || str === '#REF!') return new Date().toISOString().split('T')[0];
             
-            // Handle format "02 January 2026"
+            // Handle format "02 January 2026" atau "02-Jan-2026"
             const d = new Date(str);
-            if (!isNaN(d.getTime()) && String(str).includes(' ')) {
+            if (!isNaN(d.getTime())) {
+                // Jika formatnya dd/mm/yyyy, JS Date bisa salah persepsi (anggap mm/dd)
+                // Kita cek dulu apakah ada string '/' dan panjang tahun 4.
+                const parts = String(str).split('/');
+                if (parts.length === 3 && parts[2].length === 4) {
+                     // Asumsi input dari Excel adalah dd/mm/yyyy
+                     return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                }
                 return d.toISOString().split('T')[0];
             }
 
-            // Handle format dd/mm/yyyy
             const parts = String(str).split('/');
             if (parts.length === 3 && parts[2].length >= 4) {
                 return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
@@ -376,7 +382,8 @@
         const cleanCurrency = (val) => {
             if (val === null || val === undefined || val === '') return 0;
             if (typeof val === 'number') return val;
-            const str = String(val).replace(/[^0-9,-]/g, '').replace(/,/g, '.');
+            // Hapus "Rp", spasi, dan koma (pemisah ribuan)
+            const str = String(val).replace(/Rp/gi, '').replace(/\s/g, '').replace(/,/g, '');
             return parseFloat(str) || 0;
         };
 
@@ -601,18 +608,56 @@
         }
 
         // =====================================================================
-        // 8. IMPORT FILE (XLSX / CSV) — Auto Detect Format
+        // 8. IMPORT FILE (XLSX / CSV / TXT) — Auto Detect Format
         // =====================================================================
         function handleImportFile(event) {
             const file = event.target.files[0];
             if (!file) return;
             const ext = file.name.split('.').pop().toLowerCase();
 
-            if (ext === 'xlsx' || ext === 'xls') importExcelXLSX(event);
-            else if (ext === 'csv')              importCSV(event);
-            else Swal.fire('Error', 'Format file tidak didukung. Gunakan .xlsx, .xls, atau .csv', 'error');
-
+            if (ext === 'xlsx' || ext === 'xls') {
+                importExcelXLSX(event);
+            } else if (ext === 'csv' || ext === 'txt') {
+                importTextFile(event);
+            } else {
+                Swal.fire('Error', 'Format file tidak didukung. Gunakan .xlsx, .xls, .csv, atau .txt', 'error');
+            }
             event.target.value = '';
+        }
+
+        function importTextFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                let text = e.target.result;
+                if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+                
+                // Coba tebak separator (koma atau tab)
+                const lines = text.split(/\r?\n/);
+                let isTSV = false;
+                if (lines.length > 0 && lines[0].includes('\t')) isTSV = true;
+                
+                // Gunakan XLSX untuk memparse string
+                let workbook;
+                if (isTSV) {
+                    workbook = XLSX.read(text, { type: 'string', FS: '\t' });
+                } else {
+                    workbook = XLSX.read(text, { type: 'string' });
+                }
+                
+                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: '' });
+                const allText = text.toUpperCase();
+
+                if (allText.includes('SURAT TANDA SETOR') || allText.includes('NOMOR STS') || allText.includes('NILAI STS')) {
+                    importSTS(rows);
+                } else if (allText.includes('NAMA PASIEN')) {
+                    importUraianHarian(rows);
+                } else {
+                    Swal.fire('Gagal', 'Format file txt/csv tidak dikenali.', 'error');
+                }
+            };
+            reader.readAsText(file);
         }
 
         function importExcelXLSX(event) {
@@ -648,7 +693,7 @@
                     return;
                 }
 
-                if (allText.includes('SURAT TANDA SETOR') || allText.includes('NOMOR STS')) {
+                if (allText.includes('SURAT TANDA SETOR') || allText.includes('NOMOR STS') || allText.includes('NILAI STS')) {
                     const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: '' });
                     importSTS(rows);
                     return;
@@ -762,45 +807,71 @@
             }
         }
 
-        // --- Parser STS ---
+        // --- Parser STS (Smart Detection) ---
         function importSTS(rows) {
             let imported = [];
             let isHeaderFound = false;
             let counter = 1;
+            let mode = 'DAFTAR'; // Default
+
             for (let i = 0; i < rows.length; i++) {
-                const row = rows[i].map(c => String(c).toUpperCase());
-                if (row.some(c => c.includes('NOMOR STS')) && !row.some(c => c.includes('SIPD'))) {
+                const row = rows[i].map(c => String(c || '').toUpperCase().trim());
+                const rowStr = row.join(' ');
+
+                // Deteksi Header
+                if (rowStr.includes('NOMOR STS') && rowStr.includes('URAIAN')) {
                     isHeaderFound = true;
+                    mode = 'DAFTAR';
                     continue;
                 }
-                if (!isHeaderFound) continue;
-                if (row[0] && row[0].includes('TOTAL')) break;
-
-                let noRaw = rows[i][0];
-                let nomorSTS = rows[i][1];
-                let nomorSIPD = rows[i][2];
-                let uraian = rows[i][3];
-                let tglTerima = rows[i][4];
-                let tglSetor = rows[i][5];
-                let jumlah = rows[i][6];
-
-                // Skip jika baris adalah error #REF!
-                if (String(noRaw).includes('#REF!') || String(nomorSTS).includes('#REF!')) continue;
-
-                if (nomorSTS && String(nomorSTS).trim() !== '') {
-                    let tglTerimaStr = parseTanggalString(String(tglTerima));
-                    let tglSetorStr = parseTanggalString(String(tglSetor));
-                    
-                    imported.push({
-                        no: counter++,
-                        nomorSTS: String(nomorSTS).trim(),
-                        nomorSIPD: String(nomorSIPD || '').replace('#REF!', '').trim(),
-                        uraian: String(uraian || '').replace('#REF!', '').trim(),
-                        tanggal: tglTerimaStr, // Tanggal STS
-                        tglSetor: tglSetorStr,
-                        jumlah: cleanCurrency(jumlah)
-                    });
+                if (rowStr.includes('NILAI STS') && rowStr.includes('TANGGAL STS')) {
+                    isHeaderFound = true;
+                    mode = 'BPK';
+                    continue;
                 }
+                if (rowStr.includes('NOMOR STS') && rowStr.includes('SIPD') && !row.some(c => c.includes('URAIAN'))) {
+                     isHeaderFound = true;
+                     mode = 'BPK';
+                     continue;
+                }
+
+                if (!isHeaderFound) continue;
+                if (rowStr.includes('TOTAL') || rowStr.includes('JUMLAH')) break; // Stop at total
+
+                let nomorSTS = '', nomorSIPD = '', uraian = '', tglStr = '', tglSetorStr = '', jumlah = 0;
+
+                if (mode === 'DAFTAR') {
+                    nomorSTS = rows[i][1];
+                    nomorSIPD = rows[i][2];
+                    uraian = rows[i][3];
+                    tglStr = rows[i][4];
+                    tglSetorStr = rows[i][5];
+                    jumlah = rows[i][6];
+                } else if (mode === 'BPK') {
+                    nomorSTS = rows[i][1];
+                    nomorSIPD = rows[i][2];
+                    jumlah = rows[i][3];
+                    tglStr = rows[i][4];
+                    tglSetorStr = rows[i][6]; // Kolom terakhir adalah Hingga Tanggal
+                    uraian = 'Setoran Retribusi Pelayanan Kesehatan'; // Fallback
+                }
+
+                // Validasi: Skip error #REF! atau baris kosong
+                if (!nomorSTS || String(nomorSTS).includes('#REF!') || String(nomorSTS).trim() === '') continue;
+                if (String(rows[i][0]).includes('#REF!')) continue;
+
+                let tglParsed = parseTanggalString(String(tglStr));
+                let tglSetorParsed = parseTanggalString(String(tglSetorStr));
+
+                imported.push({
+                    no: counter++,
+                    nomorSTS: String(nomorSTS).trim(),
+                    nomorSIPD: String(nomorSIPD || '').replace('#REF!', '').trim(),
+                    uraian: String(uraian || '').replace('#REF!', '').trim(),
+                    tanggal: tglParsed, 
+                    tglSetor: tglSetorParsed,
+                    jumlah: cleanCurrency(jumlah)
+                });
             }
 
             if (imported.length > 0) {
@@ -811,24 +882,6 @@
             } else {
                 Swal.fire('Gagal', 'Tidak ada data STS yang terdeteksi.', 'error');
             }
-        }
-
-        // --- Parser CSV (fallback) ---
-        function importCSV(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                let text = e.target.result;
-                if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-                const workbook = XLSX.read(text, { type: 'string' });
-                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: '' });
-                const allText = rows.flat().join(' ').toUpperCase();
-                if (allText.includes('NAMA PASIEN')) importUraianHarian(rows);
-                else Swal.fire('Gagal', 'Format CSV tidak dikenali.', 'error');
-                renderTabelHarian();
-            };
-            reader.readAsText(file);
         }
 
         // =====================================================================
@@ -896,7 +949,7 @@
             tbody.innerHTML = '';
 
             if (dataSTS.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-400">Belum ada data STS. Import file Excel untuk memulai.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-400">Belum ada data STS. Import file Excel/TXT untuk memulai.</td></tr>';
                 return;
             }
 
@@ -924,7 +977,7 @@
         }
 
         // =====================================================================
-        // 11. EXPORT EXCEL: URAIAN HARIAN (Persis format asli per bulan)
+        // 11. EXPORT EXCEL: URAIAN HARIAN
         // =====================================================================
         function exportPersisExcel() {
             if (dataPasien.length === 0) {
@@ -1076,18 +1129,10 @@
         // 14. EXPORT: FORM KONFIRMASI BPK
         // =====================================================================
         function exportTemplateKonfirmasiBPK() {
-            // JIKA DATA KOSONG, OTOMATIS ISI DENGAN DATA DEMO
             if (dataSTS.length === 0) {
-                dataSTS = [
-                    { no: 1, nomorSTS: "001/DG QRIS/PKM-TERING/I/2026", nomorSIPD: "64.07/42.0/000162/STS/1.02.0.00.0.00.01.0000/3/2026", uraian: "Setoran Retribusi Pelayanan Kesehatan Minggu 1 Tanggal 2 Bulan Januari 2026 UPTD Puskesmas Tering Seberang", tanggal: "2026-01-02", tglSetor: "2026-01-02", jumlah: 238000 },
-                    { no: 2, nomorSTS: "002/DG QRIS/PKM-TERING/I/2026", nomorSIPD: "64.07/42.0/000163/STS/1.02.0.00.0.00.01.0000/3/2026", uraian: "Setoran Retribusi Pelayanan Kesehatan Minggu 1 Tanggal 3 Bulan Januari 2026 UPTD Puskesmas Tering Seberang", tanggal: "2026-01-03", tglSetor: "2026-01-03", jumlah: 117500 },
-                    { no: 3, nomorSTS: "003/DG QRIS/PKM-TERING/I/2026", nomorSIPD: "64.07/42.0/000164/STS/1.02.0.00.0.00.01.0000/3/2026", uraian: "Setoran Retribusi Pelayanan Kesehatan Minggu 2 Tanggal 5 Bulan Januari 2026 UPTD Puskesmas Tering Seberang", tanggal: "2026-01-05", tglSetor: "2026-01-05", jumlah: 394500 }
-                ];
-                localStorage.setItem('dataSTS', JSON.stringify(dataSTS));
-                renderTabelSTS();
-                Swal.fire('Info', 'Karena data kosong, sistem otomatis memuat Data DEMO STS untuk mencetak Form BPK ini.', 'info');
+                Swal.fire('Info', 'Belum ada data STS. Silakan import file terlebih dahulu.', 'info');
+                return;
             }
-
             const ws_data = [];
             ws_data.push(['BADAN PEMERIKSA KEUANGAN']);
             ws_data.push(['FORM PENGISIAN KONFIRMASI PENYETORAN PENDAPATAN']);
