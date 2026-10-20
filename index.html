@@ -19,11 +19,16 @@
         .card p { font-size: 1.8rem; font-weight: bold; color: #007bff; }
         
         .table-section, .chart-section { background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 2rem; }
-        h3 { margin-bottom: 1rem; color: #0056b3; display: flex; justify-content: space-between; align-items: center; }
+        h3 { margin-bottom: 1rem; color: #0056b3; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
         
-        .btn-tambah { background-color: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-tambah { background-color: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-tambah:hover { background-color: #218838; }
-        .btn-reset { background-color: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 0.9rem; margin-left: 10px; }
+        .btn-excel { background-color: #17a2b8; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-excel:hover { background-color: #138496; }
+        .btn-print { background-color: #6c757d; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-print:hover { background-color: #5a6268; }
+        .btn-reset { background-color: #dc3545; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 0.9rem; }
         
         .table-wrapper { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
@@ -33,7 +38,6 @@
         .chart-section { max-width: 900px; margin: 0 auto 2rem auto; }
         footer { text-align: center; padding: 1rem; background-color: #333; color: white; margin-top: 2rem; }
 
-        /* Modal Form Styling */
         .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
         .modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 500px; border-radius: 8px; }
         .modal-content h4 { margin-bottom: 15px; color: #0056b3; }
@@ -43,6 +47,16 @@
         .modal-buttons { text-align: right; margin-top: 20px; }
         .btn-batal { background-color: #6c757d; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; margin-right: 10px; }
         .btn-simpan { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+        /* CSS Khusus untuk Cetak/Print */
+        @media print {
+            .btn-group, .modal, footer { display: none !important; }
+            header { background: none; color: black; padding: 10px 0; border-bottom: 2px solid #000; }
+            header h1, header h2 { color: black; }
+            body { background-color: white; }
+            .card { box-shadow: none; border: 1px solid #ccc; }
+            .table-section, .chart-section { box-shadow: none; border: none; padding: 0; margin-top: 20px;}
+        }
     </style>
 </head>
 <body>
@@ -71,8 +85,10 @@
         <section class="table-section">
             <h3>
                 Rekap Penerimaan per Bulan
-                <div>
+                <div class="btn-group">
                     <button class="btn-tambah" onclick="bukaForm()">+ Tambah Data</button>
+                    <button class="btn-excel" onclick="exportExcel()">📥 Export Excel</button>
+                    <button class="btn-print" onclick="window.print()">🖨️ Cetak PDF</button>
                     <button class="btn-reset" onclick="resetData()">Reset Data</button>
                 </div>
             </h3>
@@ -104,10 +120,9 @@
         <p>&copy; 2025 UPTD Puskesmas Tering Seberang</p>
     </footer>
 
-    <!-- FORM INPUT (Tersembunyi) -->
     <div id="modalForm" class="modal">
         <div class="modal-content">
-            <h4>Tambah Data Rekap</h4>
+            <h4>Tambah / Update Data Rekap</h4>
             <form id="formData">
                 <div class="form-group">
                     <label>Bulan</label>
@@ -147,7 +162,6 @@
     </div>
 
     <script>
-        // Data Default Awal (Jika belum ada data yang diinput)
         const dataDefault = [
             { bulan: "Januari",   pasien: 115, sarana: 3528300, pelayanan: 2352200, total: 5880500 },
             { bulan: "Februari",  pasien: 110, sarana: 3665100, pelayanan: 2443400, total: 6108500 },
@@ -163,17 +177,14 @@
             { bulan: "Desember",  pasien: 182, sarana: 7130100, pelayanan: 4753400, total: 11883500 }
         ];
 
-        // Ambil data dari localStorage, jika tidak ada pakai dataDefault
         let dataRetribusi = JSON.parse(localStorage.getItem('dataRetribusiPKM')) || [...dataDefault];
-        let chartInstance = null; // Variabel untuk menyimpan grafik
+        let chartInstance = null;
 
         const formatRupiah = (angka) => {
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
         };
 
-        // Fungsi untuk merender (menampilkan) semua data ke layar
         function renderData() {
-            // 1. Hitung Total
             const totalPenerimaan = dataRetribusi.reduce((acc, item) => acc + item.total, 0);
             const totalPasien = dataRetribusi.reduce((acc, item) => acc + item.pasien, 0);
             const rataRata = dataRetribusi.length > 0 ? totalPenerimaan / dataRetribusi.length : 0;
@@ -182,9 +193,8 @@
             document.getElementById('total-pasien').innerText = totalPasien.toLocaleString('id-ID');
             document.getElementById('rata-rata').innerText = formatRupiah(rataRata);
 
-            // 2. Isi Tabel
             const tbody = document.querySelector('#tabel-rekap tbody');
-            tbody.innerHTML = ''; // Kosongkan tabel sebelum diisi ulang
+            tbody.innerHTML = ''; 
             dataRetribusi.forEach(item => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -197,11 +207,9 @@
                 tbody.appendChild(row);
             });
 
-            // 3. Update Grafik
             const ctx = document.getElementById('chart-penerimaan').getContext('2d');
-            if (chartInstance) {
-                chartInstance.destroy(); // Hapus grafik lama jika ada
-            }
+            if (chartInstance) chartInstance.destroy();
+            
             chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -216,61 +224,40 @@
                 },
                 options: {
                     responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { callback: function(value) { return 'Rp ' + value.toLocaleString('id-ID'); } }
-                        }
-                    },
-                    plugins: {
-                        tooltip: { callbacks: { label: function(context) { return formatRupiah(context.raw); } } }
-                    }
+                    scales: { y: { beginAtZero: true, ticks: { callback: function(value) { return 'Rp ' + value.toLocaleString('id-ID'); } } } },
+                    plugins: { tooltip: { callbacks: { label: function(context) { return formatRupiah(context.raw); } } } }
                 }
             });
 
-            // Simpan data terbaru ke localStorage
             localStorage.setItem('dataRetribusiPKM', JSON.stringify(dataRetribusi));
         }
 
-        // Fungsi Buka & Tutup Form
-        function bukaForm() {
-            document.getElementById('modalForm').style.display = 'block';
-        }
-        function tutupForm() {
-            document.getElementById('modalForm').style.display = 'none';
-            document.getElementById('formData').reset(); // Kosongkan form
-        }
+        function bukaForm() { document.getElementById('modalForm').style.display = 'block'; }
+        function tutupForm() { document.getElementById('modalForm').style.display = 'none'; document.getElementById('formData').reset(); }
 
-        // Event Listener saat Form di-Submit (Tombol Simpan diklik)
         document.getElementById('formData').addEventListener('submit', function(e) {
-            e.preventDefault(); // Mencegah halaman reload
-
+            e.preventDefault();
             const bulan = document.getElementById('inputBulan').value;
             const pasien = parseInt(document.getElementById('inputPasien').value);
             const sarana = parseInt(document.getElementById('inputSarana').value);
             const pelayanan = parseInt(document.getElementById('inputPelayanan').value);
             const total = sarana + pelayanan;
 
-            // Cek apakah bulan ini sudah ada datanya (agar tidak dobel)
             const indexBulan = dataRetribusi.findIndex(item => item.bulan === bulan);
 
             if (indexBulan !== -1) {
-                // Jika sudah ada, update datanya (Timpa)
                 dataRetribusi[indexBulan] = { bulan, pasien, sarana, pelayanan, total };
             } else {
-                // Jika belum ada, tambah data baru
                 dataRetribusi.push({ bulan, pasien, sarana, pelayanan, total });
             }
 
-            // Urutkan data berdasarkan bulan (Januari - Desember)
             const urutanBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
             dataRetribusi.sort((a, b) => urutanBulan.indexOf(a.bulan) - urutanBulan.indexOf(b.bulan));
 
             tutupForm();
-            renderData(); // Tampilkan ulang data terbaru
+            renderData();
         });
 
-        // Fungsi untuk mereset data ke awal (menghapus inputan)
         function resetData() {
             if (confirm("Apakah Anda yakin ingin menghapus data inputan dan kembali ke data awal?")) {
                 localStorage.removeItem('dataRetribusiPKM');
@@ -279,7 +266,23 @@
             }
         }
 
-        // Jalankan fungsi render saat halaman pertama kali dibuka
+        // FITUR EXPORT EXCEL (CSV)
+        function exportExcel() {
+            let csvContent = "data:text/csv;charset=utf-8,Bulan,Jumlah Pasien,Jasa Sarana (Rp),Jasa Pelayanan (Rp),Total (Rp)\n";
+            dataRetribusi.forEach(function(rowArray) {
+                let row = `"${rowArray.bulan}",${rowArray.pasien},${rowArray.sarana},${rowArray.pelayanan},${rowArray.total}`;
+                csvContent += row + "\n";
+            });
+            
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Rekap_Retribusi_PKM_Tering_2025.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         renderData();
     </script>
 </body>
