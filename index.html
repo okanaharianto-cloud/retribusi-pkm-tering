@@ -355,6 +355,8 @@
         // ==========================================
         // FITUR IMPORT CSV AUTO-DETECT
         // ==========================================
+ 
+        // --- IMPORT CSV (ALGORITMA BARU YANG SANGAT KUAT) ---
         function importCSV(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -362,20 +364,15 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 let text = e.target.result;
-                if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // Handle BOM
+                
+                // 1. Bersihkan karakter aneh (BOM) dari Excel
+                if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+                
+                // 2. Cek tipe file (Ubah ke uppercase untuk pencarian yang aman)
+                const upperText = text.toUpperCase();
 
-                // Helper Pembersih Uang
-                const cleanCurrency = (str) => {
-                    if (!str) return 0;
-                    let cleaned = str.toString().replace(/[^0-9]/g, ''); 
-                    return parseInt(cleaned) || 0;
-                };
-
-                // ==========================================
-                // DETEKSI OTOMATIS: FILE BULANAN ATAU HARIAN?
-                // ==========================================
-                if (text.includes('RINCIAN PEMBAGIAN') || (text.includes('BULAN') && text.includes('JASA SARANA') && !text.includes('THERAPY'))) {
-                    // --- PROSES FILE BULANAN (REKAPAN) ---
+                // --- DETEKSI FILE BULANAN (RINCIAN PEMBAGIAN RET) ---
+                if (upperText.includes('BULAN') && upperText.includes('JASA SARANA') && !upperText.includes('THERAPY')) {
                     const lines = text.split(/\r?\n/);
                     let importedBulanan = [];
                     let isData = false;
@@ -391,13 +388,15 @@
                                 let bulanRaw = cols[1].trim();
                                 let bulan = bulanRaw.charAt(0).toUpperCase() + bulanRaw.slice(1).toLowerCase(); 
                                 let pasien = parseInt(cols[2].trim()) || 0;
-                                let sarana = cleanCurrency(cols[3]);
-                                let pelayanan = cleanCurrency(cols[4]);
-                                let total = cleanCurrency(cols[5]);
+                                
+                                // Bersihkan format uang
+                                let sarana = parseInt(cols[3].replace(/[^0-9]/g, '')) || 0;
+                                let pelayanan = parseInt(cols[4].replace(/[^0-9]/g, '')) || 0;
+                                let total = parseInt(cols[5].replace(/[^0-9]/g, '')) || 0;
                                 
                                 importedBulanan.push({ bulan, pasien, sarana, pelayanan, total });
                             }
-                        } else if (isData && line.startsWith('TOTAL')) {
+                        } else if (isData && line.toUpperCase().startsWith('TOTAL')) {
                             break;
                         }
                     }
@@ -406,32 +405,22 @@
                         dataBulanan = importedBulanan;
                         localStorage.setItem('dataBulananPKM', JSON.stringify(dataBulanan));
                         renderBulananUI();
-                        Swal.fire({
-                            title: 'Sukses!',
-                            text: `${importedBulanan.length} data Rekap Bulanan berhasil diimport. Silakan buka menu Dashboard Bulanan.`,
-                            icon: 'success'
-                        });
+                        Swal.fire('Sukses!', `${importedBulanan.length} data Rekap Bulanan berhasil diimport. Silakan buka menu Dashboard Bulanan.`, 'success');
                     } else {
                         Swal.fire('Gagal', 'Format Rekap Bulanan tidak dikenali.', 'error');
                     }
+                    event.target.value = ''; // Reset
+                    return;
+                }
 
-                } else if (text.includes('NAMA PASIEN') && text.includes('THERAPY')) {
-                    // --- PROSES FILE HARIAN (URAIAN) ---
+                // --- DETEKSI FILE HARIAN (URAIAN HARIAN) ---
+                if (upperText.includes('NAMA PASIEN') && upperText.includes('THERAPY')) {
                     const lines = text.split(/\r?\n/);
                     let importedData = [];
                     let currentPatient = null;
-                    let isValidData = false;
+                    let isHeaderFound = false;
 
-                    const parseDate = (dateStr) => {
-                        if(!dateStr) return '';
-                        let parts = dateStr.split('/');
-                        if (parts.length === 3) {
-                            return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-                        }
-                        return new Date().toISOString().split('T')[0];
-                    };
-
-                    // Parser khusus untuk baris CSV yang rumit (handle koma dalam teks)
+                    // Parser Cerdas (Handle koma di dalam tanda kutip)
                     const parseCSVLine = (line) => {
                         let result = []; let cur = ''; let inQuotes = false;
                         for (let i = 0; i < line.length; i++) {
@@ -444,272 +433,83 @@
                         return result;
                     };
 
+                    const cleanCurrency = (str) => parseInt(str.replace(/[^0-9]/g, '')) || 0;
+                    const parseDate = (dateStr) => {
+                        let parts = dateStr.split('/');
+                        if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                        return new Date().toISOString().split('T')[0];
+                    };
+
                     for (let i = 0; i < lines.length; i++) {
                         let line = lines[i];
                         if(!line.trim()) continue;
-                        if (line.toUpperCase().includes('NAMA PASIEN') && line.toUpperCase().includes('THERAPY')) {
-                            isValidData = true; continue;
+
+                        let upperLine = line.toUpperCase();
+                        
+                        // Jika baris header ditemukan, mulai baca data
+                        if (upperLine.includes('NAMA PASIEN') && upperLine.includes('THERAPY')) {
+                            isHeaderFound = true; 
+                            continue;
                         }
-                        if (line.toUpperCase().startsWith('JUMLAH')) { break; }
-                        if (!isValidData) continue;
+
+                        // Jika sudah sampai di area JUMLAH, berhenti
+                        if (isHeaderFound && (upperLine.startsWith('JUMLAH') || upperLine.startsWith('KUNJUNGAN'))) {
+                            break; 
+                        }
+
+                        if (!isHeaderFound) continue;
 
                         let cols = parseCSVLine(line);
-                        if(cols.length < 10) continue;
+                        
+                        // Jika kolom kurang dari 9, lewati (bukan baris valid)
+                        if(cols.length < 9) continue;
 
-                        let tanggalStr = cols[0], nama = cols[2], alamat = cols[3], jenis = cols[4], therapy = cols[5];
-                        let sarana = cleanCurrency(cols[7]), pelayanan = cleanCurrency(cols[8]);
+                        let tanggalStr = cols[0];
+                        let nama = cols[2] || '';
+                        let alamat = cols[3] || '';
+                        let jenis = cols[4] || '';
+                        let therapy = cols[5] || '';
+                        let sarana = cleanCurrency(cols[7] || '');
+                        let pelayanan = cleanCurrency(cols[8] || '');
 
-                        if (!therapy) continue;
-
-                        if (tanggalStr) {
-                            currentPatient = { id: Date.now() + Math.random(), tanggal: parseDate(tanggalStr), nama, alamat, jenis, therapies: [] };
+                        // KUNCI: Jika tanggalStr ada isinya, ini Pasien BARU
+                        if (tanggalStr.includes('/')) {
+                            currentPatient = {
+                                id: Date.now() + Math.random(),
+                                tanggal: parseDate(tanggalStr),
+                                nama: nama,
+                                alamat: alamat,
+                                jenis: jenis,
+                                therapies: []
+                            };
                             importedData.push(currentPatient);
                         }
 
-                        if (currentPatient && therapy) {
-                            currentPatient.therapies.push({ nama: therapy, sarana, pelayanan, total: sarana + pelayanan });
+                        // Tambahkan Therapy ke pasien saat ini
+                        if (currentPatient && therapy && !therapy.includes('NAMA OBAT')) {
+                            currentPatient.therapies.push({
+                                nama: therapy,
+                                sarana: sarana,
+                                pelayanan: pelayanan,
+                                total: sarana + pelayanan
+                            });
                         }
                     }
 
                     if (importedData.length > 0) {
+                        // Hapus data lama dan ganti dengan data baru
                         dataPasien = importedData; 
                         localStorage.setItem('dataUraianHarian', JSON.stringify(dataPasien));
                         renderTabelHarian();
-                        Swal.fire('Sukses!', `${importedData.length} data Uraian Harian berhasil diimport.`, 'success');
+                        Swal.fire('Sukses!', `${importedData.length} data pasien Uraian Harian berhasil diimport.`, 'success');
                     } else {
-                        Swal.fire('Gagal', 'Format Uraian Harian tidak dikenali.', 'error');
+                        Swal.fire('Gagal', 'Data tidak ditemukan di dalam file CSV. Pastikan format sesuai.', 'error');
                     }
-
                 } else {
-                    Swal.fire('Gagal', 'Format file tidak dikenali. Pastikan file CSV Uraian Harian atau Rekap Bulanan.', 'error');
+                    Swal.fire('Gagal', 'Format file tidak dikenali. Pastikan Anda mengunggah file CSV yang benar.', 'error');
                 }
                 
-                event.target.value = ''; // Reset input
+                event.target.value = ''; // Reset input file
             };
             reader.readAsText(file);
         }
-
-        // ==========================================
-        // RENDER TABEL HARIAN
-        // ==========================================
-        function renderTabelHarian() {
-            const tbody = document.getElementById('tbody-utama');
-            tbody.innerHTML = '';
-
-            if(dataPasien.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="text-center" style="padding:20px; color:#94A3B8;">Belum ada data. Silakan input manual atau import CSV.</td></tr>';
-                return;
-            }
-
-            let grupTanggal = {};
-            dataPasien.forEach(p => {
-                if(!grupTanggal[p.tanggal]) grupTanggal[p.tanggal] = [];
-                grupTanggal[p.tanggal].push(p);
-            });
-
-            let nomorUrut = 1;
-
-            Object.keys(grupTanggal).sort().forEach(tgl => {
-                let pasienHariIni = grupTanggal[tgl];
-                let totalSaranaHariIni = 0;
-                let totalPelayananHariIni = 0;
-
-                pasienHariIni.forEach((pasien) => {
-                    pasien.therapies.forEach((th, tIndex) => {
-                        let tr = document.createElement('tr');
-                        
-                        let tdTanggal = tIndex === 0 ? formatTanggalExcel(pasien.tanggal) : '';
-                        let tdNo = tIndex === 0 ? (nomorUrut++) : '';
-                        let tdNama = tIndex === 0 ? pasien.nama : '';
-                        let tdAlamat = tIndex === 0 ? pasien.alamat : '';
-                        let tdJenis = tIndex === 0 ? pasien.jenis : '';
-
-                        tr.innerHTML = `
-                            <td>${tdTanggal}</td>
-                            <td class="text-center">${tdNo}</td>
-                            <td>${tdNama}</td>
-                            <td>${tdAlamat}</td>
-                            <td>${tdJenis}</td>
-                            <td>${th.nama}</td>
-                            <td class="text-right">${formatRupiahWeb(th.sarana)}</td>
-                            <td class="text-right">${formatRupiahWeb(th.pelayanan)}</td>
-                            <td class="text-right">${formatRupiahWeb(th.total)}</td>
-                        `;
-                        tbody.appendChild(tr);
-
-                        totalSaranaHariIni += th.sarana;
-                        totalPelayananHariIni += th.pelayanan;
-                    });
-                });
-
-                let trTotal = document.createElement('tr');
-                trTotal.style.backgroundColor = '#F1F5F9';
-                trTotal.style.fontWeight = 'bold';
-                trTotal.innerHTML = `
-                    <td colspan="6" class="text-center"></td>
-                    <td class="text-right">${formatRupiahWeb(totalSaranaHariIni)}</td>
-                    <td class="text-right">${formatRupiahWeb(totalPelayananHariIni)}</td>
-                    <td class="text-right">${formatRupiahWeb(totalSaranaHariIni + totalPelayananHariIni)}</td>
-                `;
-                tbody.appendChild(trTotal);
-            });
-
-            let grandSarana = dataPasien.reduce((acc, p) => acc + p.therapies.reduce((sum, th) => sum + th.sarana, 0), 0);
-            let grandPelayanan = dataPasien.reduce((acc, p) => acc + p.therapies.reduce((sum, th) => sum + th.pelayanan, 0), 0);
-            let grandTotal = grandSarana + grandPelayanan;
-
-            let trGrand = document.createElement('tr');
-            trGrand.style.backgroundColor = '#E2E8F0';
-            trGrand.style.fontWeight = 'bold';
-            trGrand.style.fontSize = '1rem';
-            trGrand.innerHTML = `
-                <td colspan="6" class="text-center">JUMLAH KESELURUHAN</td>
-                <td class="text-right">${formatRupiahWeb(grandSarana)}</td>
-                <td class="text-right">${formatRupiahWeb(grandPelayanan)}</td>
-                <td class="text-right">${formatRupiahWeb(grandTotal)}</td>
-            `;
-            tbody.appendChild(trGrand);
-        }
-
-        // ==========================================
-        // RENDER DASHBOARD BULANAN
-        // ==========================================
-        function renderBulananUI() {
-            const totalPenerimaan = dataBulanan.reduce((acc, item) => acc + item.total, 0);
-            const totalPasien = dataBulanan.reduce((acc, item) => acc + item.pasien, 0);
-
-            document.getElementById('total-penerimaan').innerText = formatRupiahWeb(totalPenerimaan);
-            document.getElementById('total-pasien').innerText = totalPasien.toLocaleString('id-ID');
-
-            const tbody = document.getElementById('tbody-bulanan');
-            tbody.innerHTML = ''; 
-            dataBulanan.forEach(item => {
-                tbody.innerHTML += `<tr><td><strong>${item.bulan}</strong></td><td>${item.pasien}</td><td>${formatRupiahWeb(item.sarana)}</td><td>${formatRupiahWeb(item.pelayanan)}</td><td style="color: #10B981; font-weight: bold;">${formatRupiahWeb(item.total)}</td></tr>`;
-            });
-
-            const ctx = document.getElementById('chart-penerimaan').getContext('2d');
-            if (chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: { labels: dataBulanan.map(item => item.bulan), datasets: [{ label: 'Penerimaan (Rp)', data: dataBulanan.map(item => item.total), backgroundColor: 'rgba(37, 99, 235, 0.1)', borderColor: '#2563EB', borderWidth: 3, pointBackgroundColor: '#fff', pointBorderColor: '#2563EB', pointRadius: 5, fill: true, tension: 0.4 }] },
-                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-            });
-        }
-
-        // ==========================================
-        // EXPORT HARIAN (PERSIS EXCEL)
-        // ==========================================
-        function exportPersisExcel() {
-            if(dataPasien.length === 0) {
-                Swal.fire('Info', 'Belum ada data untuk di-export.', 'info');
-                return;
-            }
-
-            let sortedData = [...dataPasien].sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal));
-            let firstDate = new Date(sortedData[0].tanggal);
-            let namaBulan = firstDate.toLocaleString('id-ID', { month: 'long' }).toUpperCase();
-            let tahun = firstDate.getFullYear();
-
-            let csv = `RETRIBUSI JASA PELAYANAN KESEHATAN PUSKESMAS TERING SEBERANG ${tahun},,,,,,,,,,,\n`;
-            csv += `,,,,,,,,,,,\n`;
-            csv += `,,,,,,,,,,,\n`;
-            csv += `BULAN : ${namaBulan} ${tahun},,,,,,,,,,,\n`;
-            csv += `TANGGAL,NO,NAMA PASIEN,ALAMAT,JENIS PELAYANAN (RJ/RI),THERAPY,,JASA SARANA,JASA PELAYANAN,TOTAL,,\n`;
-            csv += `,,,,,NAMA OBAT/BHP,,,,,,\n`;
-
-            let grupTanggal = {};
-            sortedData.forEach(p => {
-                if(!grupTanggal[p.tanggal]) grupTanggal[p.tanggal] = [];
-                grupTanggal[p.tanggal].push(p);
-            });
-
-            let nomorUrut = 1;
-            let grandSarana = 0;
-            let grandPelayanan = 0;
-
-            Object.keys(grupTanggal).sort().forEach(tgl => {
-                let pasienHariIni = grupTanggal[tgl];
-                let totalSaranaHariIni = 0;
-                let totalPelayananHariIni = 0;
-
-                pasienHariIni.forEach((pasien) => {
-                    pasien.therapies.forEach((th, tIndex) => {
-                        let strTanggal = tIndex === 0 ? formatTanggalExcel(pasien.tanggal) : '';
-                        let strNo = tIndex === 0 ? nomorUrut : '';
-                        let strNama = tIndex === 0 ? pasien.nama : '';
-                        let strAlamat = tIndex === 0 ? pasien.alamat : '';
-                        let strJenis = tIndex === 0 ? pasien.jenis : '';
-                        
-                        let safeTherapy = th.nama.includes(',') ? `"${th.nama}"` : th.nama;
-                        let strSarana = formatRupiahExcel(th.sarana);
-                        let strPelayanan = formatRupiahExcel(th.pelayanan);
-                        let strTotal = formatRupiahExcel(th.total);
-
-                        csv += `${strTanggal},${strNo},${strNama},${strAlamat},${strJenis},${safeTherapy},,${strSarana},${strPelayanan},${strTotal},,\n`;
-
-                        totalSaranaHariIni += th.sarana;
-                        totalPelayananHariIni += th.pelayanan;
-                    });
-                    nomorUrut++;
-                });
-
-                csv += `,,,,,,,,,${formatRupiahExcel(totalSaranaHariIni)},${formatRupiahExcel(totalPelayananHariIni)},\n`;
-                grandSarana += totalSaranaHariIni;
-                grandPelayanan += totalPelayananHariIni;
-            });
-
-            let grandTotal = grandSarana + grandPelayanan;
-            
-            csv += `JUMLAH,,,,,,,${formatRupiahExcel(grandSarana)},${formatRupiahExcel(grandPelayanan)},${formatRupiahExcel(grandTotal)},,\n`;
-            csv += `,,,,,,,,,,,\n`;
-            csv += `JUMLAH KESELURUHAN,,,"${formatRupiahExcel(grandTotal).trim()},00",,,,,,,,,\n`;
-            csv += `JUMLAH KUNJUNGAN,,,,,,,,,,,\n`;
-            csv += `SARANA,,,"${formatRupiahExcel(grandSarana).trim()},00",,,,,,,,,\n`;
-            csv += `JASA PELAYANAN,,,"${formatRupiahExcel(grandPelayanan).trim()},00",,,,,,,,,\n`;
-
-            var link = document.createElement("a"); 
-            link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + csv)); 
-            link.setAttribute("download", `URAIAN HARIAN RETRIBUSI INDUK PKM TERING SEBERANG ${tahun} - ${namaBulan}.csv`);
-            document.body.appendChild(link); 
-            link.click(); 
-            document.body.removeChild(link);
-        }
-
-        // ==========================================
-        // EXPORT BULANAN (SIMPLE EXCEL)
-        // ==========================================
-        function exportExcelBulanan() {
-            if(dataBulanan.length === 0) {
-                Swal.fire('Info', 'Belum ada data bulanan untuk di-export.', 'info');
-                return;
-            }
-            let csv = "Bulan,Jumlah Pasien,Jasa Sarana (Rp),Jasa Pelayanan (Rp),Total (Rp)\n";
-            dataBulanan.forEach(r => csv += `"${r.bulan}",${r.pasien},${r.sarana},${r.pelayanan},${r.total}\n`);
-            
-            var link = document.createElement("a"); 
-            link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + csv)); 
-            link.setAttribute("download", "Rekap_Bulanan_PKM.csv");
-            document.body.appendChild(link); 
-            link.click(); 
-            document.body.removeChild(link);
-        }
-
-        // ==========================================
-        // RESET DATA
-        // ==========================================
-        function resetDataHarian() {
-            Swal.fire({
-                title: 'Hapus Semua Data Harian?', text: "Data uraian harian akan hilang permanen!", icon: 'warning',
-                showCancelButton: true, confirmButtonColor: '#EF4444', confirmButtonText: 'Ya, Hapus'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    localStorage.removeItem('dataUraianHarian');
-                    dataPasien = [];
-                    renderTabelHarian();
-                    Swal.fire('Terhapus!', 'Data Harian berhasil dihapus.', 'success');
-                }
-            });
-        }
-    </script>
-</body>
-</html>
