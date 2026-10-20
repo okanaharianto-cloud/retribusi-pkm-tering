@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- LIBRARY UNTUK MEMBUAT FILE EXCEL (.XLSX) SUNGGUHAN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
         :root {
@@ -77,7 +79,6 @@
         .card-icon { width: 60px; height: 60px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 1.8rem; color: white; }
         .bg-blue { background: linear-gradient(135deg, #3B82F6, #2563EB); }
         .bg-green { background: linear-gradient(135deg, #10B981, #059669); }
-        .bg-orange { background: linear-gradient(135deg, #F59E0B, #D97706); }
         .card-info h3 { font-size: 0.9rem; color: var(--secondary); margin-bottom: 5px; }
         .card-info p { font-size: 1.5rem; font-weight: 700; color: var(--bg-sidebar); }
 
@@ -145,7 +146,7 @@
                             <input type="file" id="fileImport" accept=".csv" style="display: none;" onchange="importCSV(event)">
                             <button class="btn btn-secondary" onclick="document.getElementById('fileImport').click()"><i class="fa-solid fa-file-import"></i> Import CSV (Auto)</button>
                             <button class="btn btn-primary" onclick="bukaForm()"><i class="fa-solid fa-plus"></i> Input Pasien Baru</button>
-                            <button class="btn btn-success" onclick="exportPersisExcel()"><i class="fa-solid fa-file-excel"></i> Export Persis Excel</button>
+                            <button class="btn btn-success" onclick="exportPersisExcel()"><i class="fa-solid fa-file-excel"></i> Export Excel (.xlsx)</button>
                             <button class="btn btn-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i> Print PDF</button>
                             <button class="btn btn-danger" onclick="resetDataHarian()"><i class="fa-solid fa-trash"></i> Reset</button>
                         </div>
@@ -180,7 +181,7 @@
                     <div class="section-header">
                         <h3>Rekap Data Bulanan</h3>
                         <div>
-                            <button class="btn btn-success" onclick="exportExcelBulanan()"><i class="fa-solid fa-file-excel"></i> Export Excel</button>
+                            <button class="btn btn-success" onclick="exportExcelBulanan()"><i class="fa-solid fa-file-excel"></i> Export Excel (.xlsx)</button>
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -278,10 +279,6 @@
         }
 
         // --- FORMAT RUPIAH ---
-        const formatRupiahExcel = (angka) => {
-            if(isNaN(angka) || angka === 0) return ' Rp -   ';
-            return ' Rp ' + angka.toLocaleString('id-ID') + ' ';
-        };
         const formatRupiahWeb = (angka) => {
             if(isNaN(angka) || angka === 0) return '-';
             return 'Rp ' + angka.toLocaleString('id-ID');
@@ -353,7 +350,7 @@
         });
 
         // ==========================================
-        // FITUR IMPORT CSV AUTO-DETECT (SUPER CERDAS)
+        // FITUR IMPORT CSV AUTO-DETECT
         // ==========================================
         function importCSV(event) {
             const file = event.target.files[0];
@@ -372,9 +369,7 @@
                     return parseInt(cleaned) || 0;
                 };
 
-                // ==========================================
-                // DETEKSI 1: RINCIAN PEMBAGIAN RET (Bulanan Sederhana)
-                // ==========================================
+                // DETEKSI 1: RINCIAN PEMBAGIAN RET
                 if (upperText.includes('RINCIAN PEMBAGIAN') || (upperText.includes('BULAN') && upperText.includes('JASA SARANA') && !upperText.includes('THERAPY'))) {
                     const lines = text.split(/\r?\n/);
                     let importedBulanan = [];
@@ -397,31 +392,23 @@
                                 
                                 importedBulanan.push({ bulan, pasien, sarana, pelayanan, total });
                             }
-                        } else if (isData && line.startsWith('TOTAL')) {
-                            break;
-                        }
+                        } else if (isData && line.startsWith('TOTAL')) { break; }
                     }
 
                     if (importedBulanan.length > 0) {
                         dataBulanan = importedBulanan;
                         localStorage.setItem('dataBulananPKM', JSON.stringify(dataBulanan));
                         renderBulananUI();
-                        Swal.fire('Sukses!', `${importedBulanan.length} data Rekap Bulanan berhasil diimport. Silakan buka menu Dashboard Bulanan.`, 'success');
-                    } else {
-                        Swal.fire('Gagal', 'Format Rincian Pembagian Ret tidak dikenali.', 'error');
-                    }
+                        Swal.fire('Sukses!', `${importedBulanan.length} data Rekap Bulanan berhasil diimport.`, 'success');
+                    } else { Swal.fire('Gagal', 'Format Rincian Pembagian Ret tidak dikenali.', 'error'); }
                     event.target.value = '';
                     return;
                 }
 
-                // ==========================================
-                // DETEKSI 2: RETRIBUSI PKM TERING (Total Lokasi)
-                // ==========================================
+                // DETEKSI 2: RETRIBUSI PKM TERING
                 if (upperText.includes('TEMPAT PELAYANAN') && upperText.includes('TOTAL')) {
                     const lines = text.split(/\r?\n/);
-                    let monthName = "Januari"; // default
-                    
-                    // Cari nama bulan
+                    let monthName = "Januari";
                     for (let line of lines) {
                         if(line.toUpperCase().includes('BULAN :')) {
                             let parts = line.split(':');
@@ -433,20 +420,11 @@
                     let sarana = 0, pelayanan = 0, total = 0, pasien = 0;
                     let found = false;
 
-                    // Cari baris Total
                     for (let line of lines) {
                         if (line.trim().startsWith('Total,') || line.trim().startsWith('TOTAL,')) {
                             let cols = line.split(',');
-                            // Cari kolom yang mengandung 'Rp'
                             let rpValues = cols.filter(c => c.toUpperCase().includes('RP')).map(c => cleanCurrency(c));
-                            
-                            if(rpValues.length >= 3) {
-                                sarana = rpValues[0];
-                                pelayanan = rpValues[1];
-                                total = rpValues[2];
-                            }
-                            
-                            // Pasien biasanya di kolom ke 2 (Bayar) atau ke 9 (Total)
+                            if(rpValues.length >= 3) { sarana = rpValues[0]; pelayanan = rpValues[1]; total = rpValues[2]; }
                             pasien = parseInt(cols[2]) || parseInt(cols[9]) || 0;
                             found = true;
                             break;
@@ -454,10 +432,8 @@
                     }
 
                     if (found && total > 0) {
-                        // Timpa atau tambahkan ke dataBulanan
                         let bulanCapitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1).toLowerCase();
                         let indexBulan = dataBulanan.findIndex(i => i.bulan === bulanCapitalized);
-                        
                         let dataBaru = { bulan: bulanCapitalized, pasien, sarana, pelayanan, total };
                         
                         if(indexBulan !== -1) dataBulanan[indexBulan] = dataBaru;
@@ -469,16 +445,12 @@
                         localStorage.setItem('dataBulananPKM', JSON.stringify(dataBulanan));
                         renderBulananUI();
                         Swal.fire('Sukses!', `Data Rekap Bulan ${bulanCapitalized} berhasil diimport.`, 'success');
-                    } else {
-                        Swal.fire('Gagal', 'Baris Total tidak ditemukan di file ini.', 'error');
-                    }
+                    } else { Swal.fire('Gagal', 'Baris Total tidak ditemukan di file ini.', 'error'); }
                     event.target.value = '';
                     return;
                 }
 
-                // ==========================================
-                // DETEKSI 3: URAIAN HARIAN (Data Pasien)
-                // ==========================================
+                // DETEKSI 3: URAIAN HARIAN
                 if (upperText.includes('NAMA PASIEN') && upperText.includes('THERAPY')) {
                     const lines = text.split(/\r?\n/);
                     let importedData = [];
@@ -515,13 +487,8 @@
                         let cols = parseCSVLine(line);
                         if(cols.length < 9) continue;
 
-                        let tanggalStr = cols[0];
-                        let nama = cols[2] || '';
-                        let alamat = cols[3] || '';
-                        let jenis = cols[4] || '';
-                        let therapy = cols[5] || '';
-                        let sarana = cleanCurrency(cols[7] || '');
-                        let pelayanan = cleanCurrency(cols[8] || '');
+                        let tanggalStr = cols[0], nama = cols[2] || '', alamat = cols[3] || '', jenis = cols[4] || '', therapy = cols[5] || '';
+                        let sarana = cleanCurrency(cols[7] || ''), pelayanan = cleanCurrency(cols[8] || '');
 
                         if (tanggalStr.includes('/')) {
                             currentPatient = { id: Date.now() + Math.random(), tanggal: parseDate(tanggalStr), nama, alamat, jenis, therapies: [] };
@@ -538,15 +505,12 @@
                         localStorage.setItem('dataUraianHarian', JSON.stringify(dataPasien));
                         renderTabelHarian();
                         Swal.fire('Sukses!', `${importedData.length} data pasien berhasil diimport.`, 'success');
-                    } else {
-                        Swal.fire('Gagal', 'Data pasien tidak ditemukan di dalam file.', 'error');
-                    }
+                    } else { Swal.fire('Gagal', 'Data pasien tidak ditemukan di dalam file.', 'error'); }
                     event.target.value = '';
                     return;
                 }
 
-                // JIKA TIDAK ADA YANG COCOK
-                Swal.fire('Gagal', 'Format CSV tidak dikenali. Pastikan file yang di-upload adalah format Excel dari PKM Tering.', 'error');
+                Swal.fire('Gagal', 'Format CSV tidak dikenali.', 'error');
                 event.target.value = '';
             };
             reader.readAsText(file);
@@ -580,7 +544,6 @@
                 pasienHariIni.forEach((pasien) => {
                     pasien.therapies.forEach((th, tIndex) => {
                         let tr = document.createElement('tr');
-                        
                         let tdTanggal = tIndex === 0 ? formatTanggalExcel(pasien.tanggal) : '';
                         let tdNo = tIndex === 0 ? (nomorUrut++) : '';
                         let tdNama = tIndex === 0 ? pasien.nama : '';
@@ -588,32 +551,19 @@
                         let tdJenis = tIndex === 0 ? pasien.jenis : '';
 
                         tr.innerHTML = `
-                            <td>${tdTanggal}</td>
-                            <td class="text-center">${tdNo}</td>
-                            <td>${tdNama}</td>
-                            <td>${tdAlamat}</td>
-                            <td>${tdJenis}</td>
-                            <td>${th.nama}</td>
-                            <td class="text-right">${formatRupiahWeb(th.sarana)}</td>
-                            <td class="text-right">${formatRupiahWeb(th.pelayanan)}</td>
-                            <td class="text-right">${formatRupiahWeb(th.total)}</td>
+                            <td>${tdTanggal}</td><td class="text-center">${tdNo}</td>
+                            <td>${tdNama}</td><td>${tdAlamat}</td><td>${tdJenis}</td>
+                            <td>${th.nama}</td><td class="text-right">${formatRupiahWeb(th.sarana)}</td>
+                            <td class="text-right">${formatRupiahWeb(th.pelayanan)}</td><td class="text-right">${formatRupiahWeb(th.total)}</td>
                         `;
                         tbody.appendChild(tr);
-
-                        totalSaranaHariIni += th.sarana;
-                        totalPelayananHariIni += th.pelayanan;
+                        totalSaranaHariIni += th.sarana; totalPelayananHariIni += th.pelayanan;
                     });
                 });
 
                 let trTotal = document.createElement('tr');
-                trTotal.style.backgroundColor = '#F1F5F9';
-                trTotal.style.fontWeight = 'bold';
-                trTotal.innerHTML = `
-                    <td colspan="6" class="text-center"></td>
-                    <td class="text-right">${formatRupiahWeb(totalSaranaHariIni)}</td>
-                    <td class="text-right">${formatRupiahWeb(totalPelayananHariIni)}</td>
-                    <td class="text-right">${formatRupiahWeb(totalSaranaHariIni + totalPelayananHariIni)}</td>
-                `;
+                trTotal.style.backgroundColor = '#F1F5F9'; trTotal.style.fontWeight = 'bold';
+                trTotal.innerHTML = `<td colspan="6" class="text-center"></td><td class="text-right">${formatRupiahWeb(totalSaranaHariIni)}</td><td class="text-right">${formatRupiahWeb(totalPelayananHariIni)}</td><td class="text-right">${formatRupiahWeb(totalSaranaHariIni + totalPelayananHariIni)}</td>`;
                 tbody.appendChild(trTotal);
             });
 
@@ -622,15 +572,8 @@
             let grandTotal = grandSarana + grandPelayanan;
 
             let trGrand = document.createElement('tr');
-            trGrand.style.backgroundColor = '#E2E8F0';
-            trGrand.style.fontWeight = 'bold';
-            trGrand.style.fontSize = '1rem';
-            trGrand.innerHTML = `
-                <td colspan="6" class="text-center">JUMLAH KESELURUHAN</td>
-                <td class="text-right">${formatRupiahWeb(grandSarana)}</td>
-                <td class="text-right">${formatRupiahWeb(grandPelayanan)}</td>
-                <td class="text-right">${formatRupiahWeb(grandTotal)}</td>
-            `;
+            trGrand.style.backgroundColor = '#E2E8F0'; trGrand.style.fontWeight = 'bold'; trGrand.style.fontSize = '1rem';
+            trGrand.innerHTML = `<td colspan="6" class="text-center">JUMLAH KESELURUHAN</td><td class="text-right">${formatRupiahWeb(grandSarana)}</td><td class="text-right">${formatRupiahWeb(grandPelayanan)}</td><td class="text-right">${formatRupiahWeb(grandTotal)}</td>`;
             tbody.appendChild(trGrand);
         }
 
@@ -660,25 +603,25 @@
         }
 
         // ==========================================
-        // EXPORT HARIAN (PERSIS EXCEL)
+        // EXPORT EXCEL (.XLSX) PERSIS ASLI (URAIAN HARIAN)
         // ==========================================
         function exportPersisExcel() {
-            if(dataPasien.length === 0) {
-                Swal.fire('Info', 'Belum ada data untuk di-export.', 'info');
-                return;
-            }
+            if(dataPasien.length === 0) { Swal.fire('Info', 'Belum ada data untuk di-export.', 'info'); return; }
 
             let sortedData = [...dataPasien].sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal));
             let firstDate = new Date(sortedData[0].tanggal);
             let namaBulan = firstDate.toLocaleString('id-ID', { month: 'long' }).toUpperCase();
             let tahun = firstDate.getFullYear();
 
-            let csv = `RETRIBUSI JASA PELAYANAN KESEHATAN PUSKESMAS TERING SEBERANG ${tahun},,,,,,,,,,,\n`;
-            csv += `,,,,,,,,,,,\n`;
-            csv += `,,,,,,,,,,,\n`;
-            csv += `BULAN : ${namaBulan} ${tahun},,,,,,,,,,,\n`;
-            csv += `TANGGAL,NO,NAMA PASIEN,ALAMAT,JENIS PELAYANAN (RJ/RI),THERAPY,,JASA SARANA,JASA PELAYANAN,TOTAL,,\n`;
-            csv += `,,,,,NAMA OBAT/BHP,,,,,,\n`;
+            // Menyusun Array of Arrays (AoA) sesuai baris Excel asli
+            let ws_data = [];
+            
+            ws_data.push([`RETRIBUSI JASA PELAYANAN KESEHATAN PUSKESMAS TERING SEBERANG ${tahun}`]);
+            ws_data.push([]);
+            ws_data.push([]);
+            ws_data.push([`BULAN : ${namaBulan} ${tahun}`]);
+            ws_data.push(["TANGGAL", "NO", "NAMA PASIEN", "ALAMAT", "JENIS PELAYANAN (RJ/RI)", "THERAPY", "", "JASA SARANA", "JASA PELAYANAN", "TOTAL", ""]);
+            ws_data.push(["", "", "", "", "", "NAMA OBAT/BHP", "", "", "", "", ""]);
 
             let grupTanggal = {};
             sortedData.forEach(p => {
@@ -697,64 +640,80 @@
 
                 pasienHariIni.forEach((pasien) => {
                     pasien.therapies.forEach((th, tIndex) => {
-                        let strTanggal = tIndex === 0 ? formatTanggalExcel(pasien.tanggal) : '';
-                        let strNo = tIndex === 0 ? nomorUrut : '';
-                        let strNama = tIndex === 0 ? pasien.nama : '';
-                        let strAlamat = tIndex === 0 ? pasien.alamat : '';
-                        let strJenis = tIndex === 0 ? pasien.jenis : '';
+                        let row = [];
+                        if (tIndex === 0) {
+                            row.push(formatTanggalExcel(pasien.tanggal), nomorUrut, pasien.nama, pasien.alamat, pasien.jenis);
+                        } else {
+                            row.push("", "", "", "", "");
+                        }
+                        // Masukkan Therapy, kosongkan 1 kolom, lalu nominal
+                        row.push(th.nama, "", th.sarana, th.pelayanan, th.total, "");
+                        ws_data.push(row);
                         
-                        let safeTherapy = th.nama.includes(',') ? `"${th.nama}"` : th.nama;
-                        let strSarana = formatRupiahExcel(th.sarana);
-                        let strPelayanan = formatRupiahExcel(th.pelayanan);
-                        let strTotal = formatRupiahExcel(th.total);
-
-                        csv += `${strTanggal},${strNo},${strNama},${strAlamat},${strJenis},${safeTherapy},,${strSarana},${strPelayanan},${strTotal},,\n`;
-
                         totalSaranaHariIni += th.sarana;
                         totalPelayananHariIni += th.pelayanan;
                     });
                     nomorUrut++;
                 });
 
-                csv += `,,,,,,,,,${formatRupiahExcel(totalSaranaHariIni)},${formatRupiahExcel(totalPelayananHariIni)},\n`;
+                // Baris Subtotal Harian
+                ws_data.push(["", "", "", "", "", "", "", "", "", totalSaranaHariIni, totalPelayananHariIni]);
                 grandSarana += totalSaranaHariIni;
                 grandPelayanan += totalPelayananHariIni;
             });
 
             let grandTotal = grandSarana + grandPelayanan;
-            
-            csv += `JUMLAH,,,,,,,${formatRupiahExcel(grandSarana)},${formatRupiahExcel(grandPelayanan)},${formatRupiahExcel(grandTotal)},,\n`;
-            csv += `,,,,,,,,,,,\n`;
-            csv += `JUMLAH KESELURUHAN,,,"${formatRupiahExcel(grandTotal).trim()},00",,,,,,,,,\n`;
-            csv += `JUMLAH KUNJUNGAN,,,,,,,,,,,\n`;
-            csv += `SARANA,,,"${formatRupiahExcel(grandSarana).trim()},00",,,,,,,,,\n`;
-            csv += `JASA PELAYANAN,,,"${formatRupiahExcel(grandPelayanan).trim()},00",,,,,,,,,\n`;
 
-            var link = document.createElement("a"); 
-            link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + csv)); 
-            link.setAttribute("download", `URAIAN HARIAN RETRIBUSI INDUK PKM TERING SEBERANG ${tahun} - ${namaBulan}.csv`);
-            document.body.appendChild(link); 
-            link.click(); 
-            document.body.removeChild(link);
+            // Footer
+            ws_data.push(["JUMLAH", "", "", "", "", "", "", grandSarana, grandPelayanan, grandTotal, ""]);
+            ws_data.push(["", "", "", "", "", "", "", "", "", "", ""]);
+            ws_data.push(["JUMLAH KESELURUHAN", "", "", grandTotal, "", "", "", "", "", "", ""]);
+            ws_data.push(["JUMLAH KUNJUNGAN", "", "", "", "", "", "", "", "", "", ""]);
+            ws_data.push(["SARANA", "", "", grandSarana, "", "", "", "", "", "", ""]);
+            ws_data.push(["JASA PELAYANAN", "", "", grandPelayanan, "", "", "", "", "", "", ""]);
+
+            // Buat Workbook dan Simpan
+            var wb = XLSX.utils.book_new();
+            var ws = XLSX.utils.aoa_to_sheet(ws_data);
+            XLSX.utils.book_append_sheet(wb, ws, "Uraian Harian");
+            XLSX.writeFile(wb, `URAIAN HARIAN RETRIBUSI INDUK PKM TERING SEBERANG ${tahun} - ${namaBulan}.xlsx`);
         }
 
         // ==========================================
-        // EXPORT BULANAN (SIMPLE EXCEL)
+        // EXPORT EXCEL (.XLSX) BULANAN
         // ==========================================
         function exportExcelBulanan() {
-            if(dataBulanan.length === 0) {
-                Swal.fire('Info', 'Belum ada data bulanan untuk di-export.', 'info');
-                return;
-            }
-            let csv = "Bulan,Jumlah Pasien,Jasa Sarana (Rp),Jasa Pelayanan (Rp),Total (Rp)\n";
-            dataBulanan.forEach(r => csv += `"${r.bulan}",${r.pasien},${r.sarana},${r.pelayanan},${r.total}\n`);
+            if(dataBulanan.length === 0) { Swal.fire('Info', 'Belum ada data bulanan untuk di-export.', 'info'); return; }
             
-            var link = document.createElement("a"); 
-            link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + csv)); 
-            link.setAttribute("download", "Rekap_Bulanan_PKM.csv");
-            document.body.appendChild(link); 
-            link.click(); 
-            document.body.removeChild(link);
+            let ws_data = [];
+            ws_data.push(["PEMERINTAH KABUPATEN KUTAI BARAT"]);
+            ws_data.push(["DINAS KESEHATAN"]);
+            ws_data.push(["UPTD PUSKESMAS TERING SEBERANG"]);
+            ws_data.push(["JL.Kapten Tausin RT.I Tering Seberang Kec.Tering Kode Pos 75566"]);
+            ws_data.push([]);
+            ws_data.push(["REKAPAN SETORAN RETRIBUSI"]);
+            ws_data.push(["UPTD. PUSKESMAS TERING SEBERANG"]);
+            ws_data.push(["TAHUN 2026"]);
+            ws_data.push([]);
+            ws_data.push(["NO", "BULAN", "JUMLAH PASIEN", "JASA SARANA", "JASA PELAYANAN", "TOTAL"]);
+            
+            let no = 1;
+            let grandSarana = 0, grandPelayanan = 0, grandTotal = 0, totalPasien = 0;
+
+            dataBulanan.forEach(r => {
+                ws_data.push([no++, r.bulan.toUpperCase(), r.pasien, r.sarana, r.pelayanan, r.total]);
+                totalPasien += r.pasien;
+                grandSarana += r.sarana;
+                grandPelayanan += r.pelayanan;
+                grandTotal += r.total;
+            });
+
+            ws_data.push(["", "TOTAL", totalPasien, grandSarana, grandPelayanan, grandTotal]);
+
+            var wb = XLSX.utils.book_new();
+            var ws = XLSX.utils.aoa_to_sheet(ws_data);
+            XLSX.utils.book_append_sheet(wb, ws, "Rekap Bulanan");
+            XLSX.writeFile(wb, `REKAPAN RETRIBUSI PKM TERING 2026.xlsx`);
         }
 
         // ==========================================
