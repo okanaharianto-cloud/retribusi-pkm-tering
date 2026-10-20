@@ -5,13 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SI-RETRIBUSI | PKM Tering Seberang</title>
     
-    <!-- Library Eksternal -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -74,7 +72,6 @@
         .btn { padding: 10px 15px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; color: white; }
         .btn-primary { background: var(--primary); } .btn-primary:hover { background: var(--primary-dark); }
         .btn-success { background: var(--success); }
-        .btn-secondary { background: var(--secondary); }
         
         .table-responsive { overflow-x: auto; max-height: 400px; }
         table { width: 100%; border-collapse: collapse; }
@@ -92,13 +89,6 @@
         .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
         .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #CBD5E1; border-radius: 8px; outline: none; }
         .form-group input:focus, .form-group select:focus { border-color: var(--primary); }
-
-        @media print {
-            .sidebar, .topbar, .btn, .modal { display: none !important; }
-            .main-content { overflow: visible; }
-            .tab-content { display: block !important; padding: 0; }
-            .section-box { box-shadow: none; border: none; }
-        }
     </style>
 </head>
 <body>
@@ -107,7 +97,6 @@
     <div id="login-screen" class="login-container">
         <div class="login-box">
             <div class="login-logo">
-                <!-- Jika ingin pakai logo sendiri, ganti ikon di bawah dengan <img src="URL_LOGO_ANDA"> -->
                 <i class="fa-solid fa-hospital-user"></i>
             </div>
             <h2>SI-RETRIBUSI</h2>
@@ -128,11 +117,8 @@
 
     <!-- APLIKASI UTAMA -->
     <div id="app-screen" class="app-container" style="display: none;">
-        <!-- SIDEBAR -->
         <aside class="sidebar">
-            <div class="sidebar-header">
-                <i class="fa-solid fa-hospital-user"></i> SI-RETRIBUSI
-            </div>
+            <div class="sidebar-header"><i class="fa-solid fa-hospital-user"></i> SI-RETRIBUSI</div>
             <ul class="sidebar-menu">
                 <li class="active" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-pie"></i> Dashboard</li>
                 <li onclick="switchTab('harian')"><i class="fa-solid fa-file-invoice"></i> Input Harian</li>
@@ -142,38 +128,19 @@
             </div>
         </aside>
 
-        <!-- MAIN CONTENT -->
         <main class="main-content">
             <header class="topbar">
                 <div class="topbar-title" id="page-title">Dashboard Retribusi</div>
-                <div class="user-profile">
-                    <span>Administrator</span>
-                    <i class="fa-solid fa-circle-user" style="font-size: 1.5rem; color: var(--primary);"></i>
-                </div>
+                <div class="user-profile"><span>Administrator</span><i class="fa-solid fa-circle-user" style="font-size: 1.5rem; color: var(--primary);"></i></div>
             </header>
 
-            <!-- KONTEN DASHBOARD -->
             <div id="tab-dashboard" class="tab-content active">
                 <div class="summary-cards">
-                    <div class="card">
-                        <div class="card-icon bg-blue"><i class="fa-solid fa-wallet"></i></div>
-                        <div class="card-info"><h3>Total Penerimaan Setahun</h3><p id="total-penerimaan">Rp 0</p></div>
-                    </div>
-                    <div class="card">
-                        <div class="card-icon bg-green"><i class="fa-solid fa-users"></i></div>
-                        <div class="card-info"><h3>Total Pasien Setahun</h3><p id="total-pasien">0</p></div>
-                    </div>
-                    <div class="card">
-                        <div class="card-icon bg-orange"><i class="fa-solid fa-chart-line"></i></div>
-                        <div class="card-info"><h3>Rata-rata per Bulan</h3><p id="rata-rata">Rp 0</p></div>
-                    </div>
+                    <div class="card"><div class="card-icon bg-blue"><i class="fa-solid fa-wallet"></i></div><div class="card-info"><h3>Total Penerimaan Setahun</h3><p id="total-penerimaan">Rp 0</p></div></div>
+                    <div class="card"><div class="card-icon bg-green"><i class="fa-solid fa-users"></i></div><div class="card-info"><h3>Total Pasien Setahun</h3><p id="total-pasien">0</p></div></div>
+                    <div class="card"><div class="card-icon bg-orange"><i class="fa-solid fa-chart-line"></i></div><div class="card-info"><h3>Rata-rata per Bulan</h3><p id="rata-rata">Rp 0</p></div></div>
                 </div>
-
-                <div class="section-box">
-                    <div class="section-header"><h3>Grafik Penerimaan Bulanan</h3></div>
-                    <canvas id="chart-penerimaan"></canvas>
-                </div>
-
+                <div class="section-box"><div class="section-header"><h3>Grafik Penerimaan Bulanan</h3></div><canvas id="chart-penerimaan"></canvas></div>
                 <div class="section-box">
                     <div class="section-header">
                         <h3>Rekap Data Bulanan</h3>
@@ -183,15 +150,11 @@
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table>
-                            <thead><tr><th>Bulan</th><th>Jumlah Pasien</th><th>Jasa Sarana</th><th>Jasa Pelayanan</th><th>Total</th></tr></thead>
-                            <tbody id="tbody-bulanan"></tbody>
-                        </table>
+                        <table><thead><tr><th>Bulan</th><th>Jumlah Pasien</th><th>Jasa Sarana</th><th>Jasa Pelayanan</th><th>Total</th></tr></thead><tbody id="tbody-bulanan"></tbody></table>
                     </div>
                 </div>
             </div>
 
-            <!-- KONTEN HARIAN -->
             <div id="tab-harian" class="tab-content">
                 <div class="section-box">
                     <div class="section-header">
@@ -202,30 +165,20 @@
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table>
-                            <thead><tr><th>Tanggal</th><th>Nama Pasien</th><th>Layanan</th><th>Jasa Sarana</th><th>Jasa Pelayanan</th><th>Total</th></tr></thead>
-                            <tbody id="tbody-harian"></tbody>
-                        </table>
+                        <table><thead><tr><th>Tanggal</th><th>Nama Pasien</th><th>Layanan</th><th>Jasa Sarana</th><th>Jasa Pelayanan</th><th>Total</th></tr></thead><tbody id="tbody-harian"></tbody></table>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- MODAL BULANAN -->
     <div id="modalBulanan" class="modal">
         <div class="modal-content">
             <div class="modal-header"><h4>Tambah Data Bulanan</h4><span class="close" onclick="tutupFormBulanan()">&times;</span></div>
             <form id="formBulanan">
-                <div class="form-group">
-                    <label>Bulan</label>
+                <div class="form-group"><label>Bulan</label>
                     <select id="inputBulan" required>
-                        <option value="Januari">Januari</option><option value="Februari">Februari</option>
-                        <option value="Maret">Maret</option><option value="April">April</option>
-                        <option value="Mei">Mei</option><option value="Juni">Juni</option>
-                        <option value="Juli">Juli</option><option value="Agustus">Agustus</option>
-                        <option value="September">September</option><option value="Oktober">Oktober</option>
-                        <option value="November">November</option><option value="Desember">Desember</option>
+                        <option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option><option value="April">April</option><option value="Mei">Mei</option><option value="Juni">Juni</option><option value="Juli">Juli</option><option value="Agustus">Agustus</option><option value="September">September</option><option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option>
                     </select>
                 </div>
                 <div class="form-group"><label>Jumlah Pasien</label><input type="number" id="inputPasienBulanan" required min="0"></div>
@@ -236,7 +189,6 @@
         </div>
     </div>
 
-    <!-- MODAL HARIAN -->
     <div id="modalHarian" class="modal">
         <div class="modal-content">
             <div class="modal-header"><h4>Input Data Harian</h4><span class="close" onclick="tutupFormHarian()">&times;</span></div>
@@ -251,13 +203,29 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
     <script>
         // ==========================================
-        // 1. KONFIGURASI FIREBASE (GANTI DENGAN KODE ANDA)
+        // 1. LOGIKA LOGIN (Ditaruh paling atas agar aman)
+        // ==========================================
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault(); // Mencegah halaman refresh
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            
+            if(user === 'admin' && pass === '123') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-screen').style.display = 'flex';
+                initApp(); // Mulai tarik data Firebase
+            } else {
+                Swal.fire('Akses Ditolak', 'Username atau Password salah!', 'error');
+            }
+        });
+
+        // ==========================================
+        // 2. KONFIGURASI FIREBASE (GANTI DENGAN KODE ANDA)
         // ==========================================
         const firebaseConfig = {
-             apiKey: "AIzaSyDnrapvPH0noYCpcM1mOy_bpeW_urpnhU8",
+           apiKey: "AIzaSyDnrapvPH0noYCpcM1mOy_bpeW_urpnhU8",
   authDomain: "si-retribusi-pkm-tering.firebaseapp.com",
   projectId: "si-retribusi-pkm-tering",
   storageBucket: "si-retribusi-pkm-tering.firebasestorage.app",
@@ -266,16 +234,17 @@
   measurementId: "G-8D1XKNHW9F"
         };
 
-        // Inisialisasi Firebase
+        let db = null;
         try {
             firebase.initializeApp(firebaseConfig);
-            const db = firebase.firestore();
+            db = firebase.firestore();
         } catch (error) {
-            console.error("Firebase config belum diisi dengan benar.", error);
+            console.warn("Firebase belum dikonfigurasi. Aplikasi berjalan tanpa database.");
         }
-        const db = firebase.firestore();
 
-        // Data Default (Jika Database Firebase Kosong)
+        // ==========================================
+        // 3. VARIABEL & LOGIKA APLIKASI
+        // ==========================================
         const dataDefaultBulanan = [
             { bulan: "Januari", pasien: 115, sarana: 3528300, pelayanan: 2352200, total: 5880500 },
             { bulan: "Februari", pasien: 110, sarana: 3665100, pelayanan: 2443400, total: 6108500 },
@@ -295,28 +264,23 @@
         let dataHarian = [];
         let chartInstance = null;
 
-        // --- LOGIN ---
-        document.getElementById('login-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const user = document.getElementById('username').value.trim();
-            const pass = document.getElementById('password').value.trim();
-            if(user === 'admin' && pass === '123') {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('app-screen').style.display = 'flex';
-                initApp();
+        function initApp() {
+            if(db) {
+                tarikDataBulanan();
+                tarikDataHarian();
             } else {
-                Swal.fire('Akses Ditolak', 'Username atau Password salah!', 'error');
+                // Jika Firebase belum diset, tampilkan data dummy agar tabel tidak kosong
+                dataBulanan = dataDefaultBulanan;
+                renderBulananUI();
+                Swal.fire('Info', 'Firebase belum diset. Data belum tersimpan permanen.', 'info');
             }
-        });
+        }
 
         function logout() {
             Swal.fire({ title: 'Keluar Aplikasi?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#EF4444', confirmButtonText: 'Ya, Keluar' })
             .then((result) => { if (result.isConfirmed) location.reload(); });
         }
 
-        function initApp() { tarikDataBulanan(); tarikDataHarian(); }
-
-        // --- NAVIGASI ---
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.sidebar-menu li').forEach(el => el.classList.remove('active'));
@@ -327,7 +291,6 @@
 
         const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
 
-        // --- TARIK DATA FIREBASE ---
         function tarikDataBulanan() {
             db.collection("bulanan").onSnapshot((snapshot) => {
                 if (snapshot.empty) {
@@ -350,7 +313,6 @@
             });
         }
 
-        // --- RENDER UI ---
         function renderBulananUI() {
             const totalPenerimaan = dataBulanan.reduce((acc, item) => acc + item.total, 0);
             const totalPasien = dataBulanan.reduce((acc, item) => acc + item.pasien, 0);
@@ -387,7 +349,6 @@
             }
         }
 
-        // --- MODAL & SIMPAN ---
         function bukaFormBulanan() { document.getElementById('modalBulanan').style.display = 'block'; }
         function tutupFormBulanan() { document.getElementById('modalBulanan').style.display = 'none'; document.getElementById('formBulanan').reset(); }
         function bukaFormHarian() { document.getElementById('inputTanggal').valueAsDate = new Date(); document.getElementById('modalHarian').style.display = 'block'; }
@@ -395,6 +356,7 @@
 
         document.getElementById('formBulanan').addEventListener('submit', function(e) {
             e.preventDefault();
+            if(!db) return Swal.fire('Error', 'Firebase belum disetup!', 'error');
             const bulan = document.getElementById('inputBulan').value;
             const pasien = parseInt(document.getElementById('inputPasienBulanan').value);
             const sarana = parseInt(document.getElementById('inputSaranaBulanan').value);
@@ -405,6 +367,7 @@
 
         document.getElementById('formHarian').addEventListener('submit', function(e) {
             e.preventDefault();
+            if(!db) return Swal.fire('Error', 'Firebase belum disetup!', 'error');
             const tanggal = document.getElementById('inputTanggal').value;
             const nama = document.getElementById('inputNama').value;
             const layanan = document.getElementById('inputLayanan').value;
@@ -414,7 +377,6 @@
             .then(() => { tutupFormHarian(); Swal.fire({ icon: 'success', title: 'Tersimpan!', text: 'Data masuk database.', timer: 1500, showConfirmButton: false }); });
         });
 
-        // --- EXPORT CSV ---
         function exportExcelBulanan() {
             let csv = "data:text/csv;charset=utf-8,Bulan,Jumlah Pasien,Jasa Sarana (Rp),Jasa Pelayanan (Rp),Total (Rp)\n";
             dataBulanan.forEach(r => csv += `"${r.bulan}",${r.pasien},${r.sarana},${r.pelayanan},${r.total}\n`);
