@@ -224,9 +224,6 @@
                         <i class="fa-solid fa-receipt text-teal-600"></i> Data Surat Tanda Setor (STS)
                     </h2>
                     <div class="flex gap-2">
-                        <button onclick="loadDemoSTS()" class="cursor-pointer bg-slate-600 hover:bg-slate-700 text-white text-sm font-semibold rounded-lg px-4 py-2">
-                            <i class="fa-solid fa-flask mr-1"></i> Isi Data Demo
-                        </button>
                         <button onclick="exportSTS()" class="cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg px-4 py-2">
                             <i class="fa-solid fa-file-excel mr-1"></i> Export STS
                         </button>
@@ -927,21 +924,6 @@
         }
 
         // =====================================================================
-        // 10.5. LOAD DEMO STS (KHUSUS UNTUK TESTING)
-        // =====================================================================
-        function loadDemoSTS() {
-            dataSTS = [
-                { no: 1, nomorSTS: "001/DG QRIS/PKM-TERING/I/2026", nomorSIPD: "64.07/42.0/000162/STS/1.02.0.00.0.00.01.0000/3/2026", uraian: "Setoran Retribusi Pelayanan Kesehatan Minggu 1 Tanggal 2 Bulan Januari 2026 UPTD Puskesmas Tering Seberang", tanggal: "2026-01-02", tglSetor: "2026-01-02", jumlah: 238000 },
-                { no: 2, nomorSTS: "002/DG QRIS/PKM-TERING/I/2026", nomorSIPD: "64.07/42.0/000163/STS/1.02.0.00.0.00.01.0000/3/2026", uraian: "Setoran Retribusi Pelayanan Kesehatan Minggu 1 Tanggal 3 Bulan Januari 2026 UPTD Puskesmas Tering Seberang", tanggal: "2026-01-03", tglSetor: "2026-01-03", jumlah: 117500 },
-                { no: 3, nomorSTS: "003/DG QRIS/PKM-TERING/I/2026", nomorSIPD: "64.07/42.0/000164/STS/1.02.0.00.0.00.01.0000/3/2026", uraian: "Setoran Retribusi Pelayanan Kesehatan Minggu 2 Tanggal 5 Bulan Januari 2026 UPTD Puskesmas Tering Seberang", tanggal: "2026-01-05", tglSetor: "2026-01-05", jumlah: 394500 },
-                { no: 4, nomorSTS: "004/DG QRIS/PKM-TERING/I/2026", nomorSIPD: "64.07/42.0/000165/STS/1.02.0.00.0.00.01.0000/3/2026", uraian: "Setoran Retribusi Pelayanan Kesehatan Minggu 2 Tanggal 6 Bulan Januari 2026 UPTD Puskesmas Tering Seberang", tanggal: "2026-01-06", tglSetor: "2026-01-06", jumlah: 492000 }
-            ];
-            localStorage.setItem('dataSTS', JSON.stringify(dataSTS));
-            renderTabelSTS();
-            Swal.fire('Sukses', 'Data demo STS berhasil dimuat.', 'success');
-        }
-
-        // =====================================================================
         // 11. EXPORT EXCEL: URAIAN HARIAN (Persis format asli per bulan)
         // =====================================================================
         function exportPersisExcel() {
@@ -1094,10 +1076,18 @@
         // 14. EXPORT: FORM KONFIRMASI BPK
         // =====================================================================
         function exportTemplateKonfirmasiBPK() {
+            // JIKA DATA KOSONG, OTOMATIS ISI DENGAN DATA DEMO
             if (dataSTS.length === 0) {
-                Swal.fire('Info', 'Belum ada data STS. Silakan import file STS terlebih dahulu.', 'info');
-                return;
+                dataSTS = [
+                    { no: 1, nomorSTS: "001/DG QRIS/PKM-TERING/I/2026", nomorSIPD: "64.07/42.0/000162/STS/1.02.0.00.0.00.01.0000/3/2026", uraian: "Setoran Retribusi Pelayanan Kesehatan Minggu 1 Tanggal 2 Bulan Januari 2026 UPTD Puskesmas Tering Seberang", tanggal: "2026-01-02", tglSetor: "2026-01-02", jumlah: 238000 },
+                    { no: 2, nomorSTS: "002/DG QRIS/PKM-TERING/I/2026", nomorSIPD: "64.07/42.0/000163/STS/1.02.0.00.0.00.01.0000/3/2026", uraian: "Setoran Retribusi Pelayanan Kesehatan Minggu 1 Tanggal 3 Bulan Januari 2026 UPTD Puskesmas Tering Seberang", tanggal: "2026-01-03", tglSetor: "2026-01-03", jumlah: 117500 },
+                    { no: 3, nomorSTS: "003/DG QRIS/PKM-TERING/I/2026", nomorSIPD: "64.07/42.0/000164/STS/1.02.0.00.0.00.01.0000/3/2026", uraian: "Setoran Retribusi Pelayanan Kesehatan Minggu 2 Tanggal 5 Bulan Januari 2026 UPTD Puskesmas Tering Seberang", tanggal: "2026-01-05", tglSetor: "2026-01-05", jumlah: 394500 }
+                ];
+                localStorage.setItem('dataSTS', JSON.stringify(dataSTS));
+                renderTabelSTS();
+                Swal.fire('Info', 'Karena data kosong, sistem otomatis memuat Data DEMO STS untuk mencetak Form BPK ini.', 'info');
             }
+
             const ws_data = [];
             ws_data.push(['BADAN PEMERIKSA KEUANGAN']);
             ws_data.push(['FORM PENGISIAN KONFIRMASI PENYETORAN PENDAPATAN']);
@@ -1118,12 +1108,10 @@
 
             let total = 0;
             dataSTS.forEach((sts, idx) => {
-                // Konversi ke Date object agar dikenali Excel
                 let dSTS = new Date(sts.tanggal);
                 let dDari = new Date(sts.tanggal);
                 let dHingga = new Date(sts.tglSetor || sts.tanggal);
                 
-                // Fallback
                 if (isNaN(dSTS.getTime())) dSTS = sts.tanggal;
                 if (isNaN(dDari.getTime())) dDari = sts.tanggal;
                 if (isNaN(dHingga.getTime())) dHingga = sts.tglSetor || sts.tanggal;
@@ -1155,32 +1143,18 @@
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.aoa_to_sheet(ws_data);
 
-            // Atur lebar kolom
             ws['!cols'] = [
-                { wch: 5 },  // No
-                { wch: 35 }, // No STS
-                { wch: 50 }, // No SIPD
-                { wch: 15 }, // Nilai STS
-                { wch: 20 }, // Tanggal STS
-                { wch: 15 }, // Dari Tanggal
-                { wch: 15 }  // Hingga Tanggal
+                { wch: 5 },  { wch: 35 }, { wch: 50 }, { wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 15 }
             ];
 
-            // Terapkan format tanggal khusus pada kolom E, F, G
             const range = XLSX.utils.decode_range(ws['!ref']);
             for (let R = 16; R <= range.e.r; ++R) {
                 const cellE = ws['E' + (R + 1)];
-                if (cellE && cellE.t === 'n') {
-                    cellE.z = 'dd mmmm yyyy'; // Format: 02 January 2026
-                }
+                if (cellE && cellE.t === 'n') cellE.z = 'dd mmmm yyyy'; 
                 const cellF = ws['F' + (R + 1)];
-                if (cellF && cellF.t === 'n') {
-                    cellF.z = 'm/d/yyyy'; // Format: 1/2/2026
-                }
+                if (cellF && cellF.t === 'n') cellF.z = 'm/d/yyyy'; 
                 const cellG = ws['G' + (R + 1)];
-                if (cellG && cellG.t === 'n') {
-                    cellG.z = 'm/d/yyyy'; // Format: 1/2/2026
-                }
+                if (cellG && cellG.t === 'n') cellG.z = 'm/d/yyyy'; 
             }
 
             XLSX.utils.book_append_sheet(wb, ws, 'Konfirmasi BPK');
