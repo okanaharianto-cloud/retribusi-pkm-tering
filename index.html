@@ -303,16 +303,20 @@
             Swal.fire({ icon: 'success', title: 'Tersimpan!', text: 'Data berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
         });
 
-        // --- IMPORT CSV ---
+        // --- IMPORT CSV (ROBUST PARSER) ---
         function importCSV(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                const text = e.target.result;
-                const lines = text.split('\n').map(line => line.replace(/\r$/, '')); // Handle Windows CRLF
+                let text = e.target.result;
+                // Handle BOM (Byte Order Mark) if present
+                if (text.charCodeAt(0) === 0xFEFF) {
+                    text = text.slice(1);
+                }
                 
+                const lines = text.split(/\r?\n/);
                 let importedData = [];
                 let currentPatient = null;
                 let isValidData = false;
@@ -320,12 +324,13 @@
                 // Helper untuk membersihkan format uang " Rp 8.100 " menjadi angka 8100
                 const cleanCurrency = (str) => {
                     if (!str) return 0;
-                    let cleaned = str.replace(/[^0-9]/g, ''); // Hapus semua kecuali angka
+                    let cleaned = str.replace(/[^0-9]/g, ''); 
                     return parseInt(cleaned) || 0;
                 };
 
                 // Helper untuk format tanggal d/m/yyyy -> yyyy-mm-dd
                 const parseDate = (dateStr) => {
+                    if(!dateStr) return '';
                     let parts = dateStr.split('/');
                     if (parts.length === 3) {
                         let d = parts[0].padStart(2, '0');
@@ -336,45 +341,66 @@
                     return new Date().toISOString().split('T')[0];
                 };
 
+                // Robust CSV Line Parser (Handle quotes and commas)
+                const parseCSVLine = (line) => {
+                    let result = [];
+                    let cur = '';
+                    let inQuotes = false;
+                    for (let i = 0; i < line.length; i++) {
+                        let char = line[i];
+                        if (char === '"') {
+                            inQuotes = !inQuotes;
+                        } else if (char === ',' && !inQuotes) {
+                            result.push(cur.trim());
+                            cur = '';
+                        } else {
+                            cur += char;
+                        }
+                    }
+                    result.push(cur.trim());
+                    return result;
+                };
+
                 for (let i = 0; i < lines.length; i++) {
                     let line = lines[i];
                     if(!line.trim()) continue;
 
-                    // Deteksi jika sudah masuk baris data (dimulai dengan tanggal atau koma)
-                    if (line.includes('TANGGAL,NO,NAMA PASIEN')) {
+                    // Cari baris header data
+                    if (line.toUpperCase().includes('NAMA PASIEN') && line.toUpperCase().includes('THERAPY')) {
                         isValidData = true;
                         continue;
                     }
 
-                    // Stop jika sudah masuk area JUMLAH
-                    if (line.startsWith('JUMLAH') || line.startsWith('JUMLAH KESELURUHAN')) {
+                    // Hentikan proses jika sudah masuk area JUMLAH
+                    if (line.toUpperCase().startsWith('JUMLAH')) {
                         break;
                     }
 
                     if (!isValidData) continue;
 
-                    // Split by comma (perhatikan jika ada koma di dalam string, tapi format ini aman menggunakan split biasa)
-                    let cols = line.split(',');
+                    let cols = parseCSVLine(line);
+                    
+                    // Pastikan jumlah kolom cukup
+                    if(cols.length < 10) continue;
 
-                    let tanggalStr = cols[0] ? cols[0].trim() : '';
-                    let no = cols[1] ? cols[1].trim() : '';
-                    let nama = cols[2] ? cols[2].trim() : '';
-                    let alamat = cols[3] ? cols[3].trim() : '';
-                    let jenis = cols[4] ? cols[4].trim() : '';
-                    let therapy = cols[5] ? cols[5].trim() : '';
-                    let saranaStr = cols[7] ? cols[7].trim() : '';
-                    let pelayananStr = cols[8] ? cols[8].trim() : '';
+                    let tanggalStr = cols[0];
+                    let nama = cols[2];
+                    let alamat = cols[3];
+                    let jenis = cols[4];
+                    let therapy = cols[5];
+                    let saranaStr = cols[7] || '';
+                    let pelayananStr = cols[8] || '';
 
                     let sarana = cleanCurrency(saranaStr);
                     let pelayanan = cleanCurrency(pelayananStr);
 
-                    // Abaikan baris subtotal (tidak ada tanggal, nama, dan therapy)
-                    if (!tanggalStr && !nama && !therapy) continue;
+                    // Abaikan baris subtotal (tidak ada therapy)
+                    if (!therapy) continue;
 
+                    // Jika tanggalStr ada isinya, ini Pasien Baru
                     if (tanggalStr) {
-                        // Ini adalah Pasien Baru
                         currentPatient = {
-                            id: Date.now() + Math.random(), // ID unik
+                            id: Date.now() + Math.random(),
                             tanggal: parseDate(tanggalStr),
                             nama: nama,
                             alamat: alamat,
@@ -396,13 +422,13 @@
                 }
 
                 if (importedData.length > 0) {
-                    // Gabungkan dengan data lama (atau ganti jika mau pakai = )
-                    dataPasien = dataPasien.concat(importedData);
+                    // Ganti data lama dengan data baru (atau bisa digabung jika mau)
+                    dataPasien = importedData; 
                     localStorage.setItem('dataUraianHarian', JSON.stringify(dataPasien));
                     renderTabel();
                     Swal.fire('Sukses!', `${importedData.length} data pasien berhasil diimport dari CSV.`, 'success');
                 } else {
-                    Swal.fire('Gagal', 'Format CSV tidak sesuai atau data kosong.', 'error');
+                    Swal.fire('Gagal', 'Format CSV tidak dikenali. Pastikan menggunakan file URAIAN HARIAN.', 'error');
                 }
                 
                 event.target.value = ''; // Reset input
@@ -441,7 +467,6 @@
                     pasien.therapies.forEach((th, tIndex) => {
                         let tr = document.createElement('tr');
                         
-                        // Hanya tampilkan Tanggal, No, Nama, Alamat, Jenis di baris pertama therapy
                         let tdTanggal = tIndex === 0 ? formatTanggalExcel(pasien.tanggal) : '';
                         let tdNo = tIndex === 0 ? (nomorUrut++) : '';
                         let tdNama = tIndex === 0 ? pasien.nama : '';
@@ -541,12 +566,15 @@
                         let strAlamat = tIndex === 0 ? pasien.alamat : '';
                         let strJenis = tIndex === 0 ? pasien.jenis : '';
                         
-                        // Format persis seperti CSV asli: " Rp 8.100 ,"
-                        let strSarana = `"${formatRupiahExcel(th.sarana)}",`;
-                        let strPelayanan = `"${formatRupiahExcel(th.pelayanan)}",`;
-                        let strTotal = `"${formatRupiahExcel(th.total)}",,`;
+                        // Jika nama therapy mengandung koma, bungkus dengan tanda kutip
+                        let safeTherapy = th.nama.includes(',') ? `"${th.nama}"` : th.nama;
 
-                        csv += `${strTanggal},${strNo},${strNama},${strAlamat},${strJenis},${th.nama},,${strSarana}${strPelayanan}${strTotal}\n`;
+                        // Format persis seperti CSV asli: " Rp 8.100 ," (tanpa tanda kutip ganda di ujung)
+                        let strSarana = formatRupiahExcel(th.sarana);
+                        let strPelayanan = formatRupiahExcel(th.pelayanan);
+                        let strTotal = formatRupiahExcel(th.total);
+
+                        csv += `${strTanggal},${strNo},${strNama},${strAlamat},${strJenis},${safeTherapy},,${strSarana},${strPelayanan},${strTotal},,\n`;
 
                         totalSaranaHariIni += th.sarana;
                         totalPelayananHariIni += th.pelayanan;
@@ -554,9 +582,8 @@
                     nomorUrut++;
                 });
 
-                // Baris Subtotal Harian
-                let dailyTotal = totalSaranaHariIni + totalPelayananHariIni;
-                csv += `,,,,,,,,,"${formatRupiahExcel(totalSaranaHariIni)}","${formatRupiahExcel(totalPelayananHariIni)}",\n`;
+                // Baris Subtotal Harian (Sesuai format Excel Asli)
+                csv += `,,,,,,,,,${formatRupiahExcel(totalSaranaHariIni)},${formatRupiahExcel(totalPelayananHariIni)},\n`;
 
                 grandSarana += totalSaranaHariIni;
                 grandPelayanan += totalPelayananHariIni;
@@ -564,13 +591,13 @@
 
             let grandTotal = grandSarana + grandPelayanan;
             
-            // Footer JUMLAH
-            csv += `JUMLAH,,,,,,,"${formatRupiahExcel(grandSarana)}","${formatRupiahExcel(grandPelayanan)}","${formatRupiahExcel(grandTotal)}",,\n`;
+            // Footer JUMLAH (Sesuai format Excel Asli)
+            csv += `JUMLAH,,,,,,,${formatRupiahExcel(grandSarana)},${formatRupiahExcel(grandPelayanan)},${formatRupiahExcel(grandTotal)},,\n`;
             csv += `,,,,,,,,,,,\n`;
-            csv += `JUMLAH KESELURUHAN,,,"${formatRupiahExcel(grandTotal)}",,,,,,,,,\n`;
+            csv += `JUMLAH KESELURUHAN,,,"${formatRupiahExcel(grandTotal).trim()},00",,,,,,,,,\n`;
             csv += `JUMLAH KUNJUNGAN,,,,,,,,,,,\n`;
-            csv += `SARANA,,,"${formatRupiahExcel(grandSarana)}",,,,,,,,,\n`;
-            csv += `JASA PELAYANAN,,,"${formatRupiahExcel(grandPelayanan)}",,,,,,,,,\n`;
+            csv += `SARANA,,,"${formatRupiahExcel(grandSarana).trim()},00",,,,,,,,,\n`;
+            csv += `JASA PELAYANAN,,,"${formatRupiahExcel(grandPelayanan).trim()},00",,,,,,,,,\n`;
 
             // Download File
             var link = document.createElement("a"); 
