@@ -18,240 +18,342 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
 
-    <!-- ============ HEADER INSTANSI ============ -->
-    <header class="bg-white border-b border-slate-200 py-6 px-4 md:px-8 shadow-sm">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="text-center md:text-left">
-                <h1 class="text-lg md:text-xl font-bold tracking-wide text-slate-900">PEMERINTAH KABUPATEN KUTAI BARAT</h1>
-                <p class="text-sm font-semibold text-teal-600">DINAS KESEHATAN • UPTD PUSKESMAS TERING SEBERANG</p>
-                <p class="text-xs text-slate-500 mt-1">JL. Kapten Tausin RT.I Tering Seberang Kec. Tering Kode Pos 75566</p>
-            </div>
-            <div class="bg-teal-50 border border-teal-200 rounded-lg px-4 py-2 text-center">
-                <span class="text-xs font-bold text-teal-800 block">TAHUN ANGGARAN</span>
-                <span class="text-lg font-black text-teal-600">2026</span>
-            </div>
-        </div>
-    </header>
-
-    <!-- ============ TAB NAVIGASI ============ -->
-    <nav class="bg-white border-b border-slate-200 px-4 md:px-8">
-        <div class="max-w-7xl mx-auto flex gap-2 overflow-x-auto">
-            <button onclick="switchTab('harian')" id="btn-tab-harian" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-teal-600 text-teal-600 whitespace-nowrap">
-                <i class="fa-solid fa-file-invoice mr-1"></i> Uraian Harian
-            </button>
-            <button onclick="switchTab('bulanan')" id="btn-tab-bulanan" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 whitespace-nowrap">
-                <i class="fa-solid fa-chart-pie mr-1"></i> Dashboard Bulanan
-            </button>
-            <button onclick="switchTab('sts')" id="btn-tab-sts" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 whitespace-nowrap">
-                <i class="fa-solid fa-receipt mr-1"></i> Data STS BPK
-            </button>
-        </div>
-    </nav>
-
-    <main class="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
-
-        <!-- ==================== TAB: HARIAN ==================== -->
-        <div id="tab-harian" class="tab-content space-y-8">
-
-            <!-- Panel Cetak Laporan BPK -->
-            <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-folder-open text-teal-600"></i> Panel Cetak Laporan Keuangan & Audit BPK
-                </h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <button onclick="exportTemplateKonfirmasiBPK()" class="cursor-pointer bg-blue-700 hover:bg-blue-800 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
-                        <i class="fa-solid fa-file-shield mr-2"></i> 1. Form Konfirmasi BPK 2026
-                    </button>
-                    <button onclick="exportPersisExcel()" class="cursor-pointer bg-teal-700 hover:bg-teal-800 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
-                        <i class="fa-solid fa-file-excel mr-2"></i> 2. Uraian Harian (XLSX)
-                    </button>
-                    <button onclick="exportExcelBulanan()" class="cursor-pointer bg-amber-700 hover:bg-amber-800 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
-                        <i class="fa-solid fa-chart-bar mr-2"></i> 3. Rekap Bulanan
-                    </button>
-                    <button onclick="document.getElementById('fileImport').click()" class="cursor-pointer bg-slate-700 hover:bg-slate-800 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
-                        <i class="fa-solid fa-file-import mr-2"></i> 4. Import Excel/CSV/TXT
-                    </button>
-                    <input type="file" id="fileImport" accept=".xlsx,.xls,.csv,.txt" class="hidden" onchange="handleImportFile(event)">
+    <!-- ============ LAYAR LOGIN ============ -->
+    <div id="login-screen" class="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                    <i class="fa-solid fa-lock"></i>
                 </div>
-            </section>
+                <h2 class="text-2xl font-bold text-slate-800">Login Sistem</h2>
+                <p class="text-sm text-slate-500 mt-1">UPTD PKM Tering Seberang</p>
+            </div>
+            <form id="login-form" onsubmit="event.preventDefault(); prosesLogin();">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Username</label>
+                        <input type="text" id="login-username" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Masukkan username" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Password</label>
+                        <input type="password" id="login-password" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Masukkan password" required>
+                    </div>
+                    <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg px-4 py-3 transition-colors shadow-sm mt-2">
+                        Masuk ke Aplikasi <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-            <!-- Formulir Input Pasien -->
-            <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-pen-to-square text-teal-600"></i> Formulir Entri Data & Tindakan Pasien
-                </h2>
-                <form onsubmit="event.preventDefault(); simpanFormPasien();" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Tanggal Periksa</label>
-                            <input type="date" id="form-tanggal" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-teal-500 focus:ring-2 focus:ring-teal-100">
+    <!-- ============ APLIKASI UTAMA (Disembunyikan sebelum login) ============ -->
+    <div id="main-app" style="display: none;">
+        
+        <!-- HEADER INSTANSI -->
+        <header class="bg-white border-b border-slate-200 py-6 px-4 md:px-8 shadow-sm">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="text-center md:text-left flex items-center gap-4">
+                    <!-- Logo bisa ditambahkan di sini -->
+                    <div>
+                        <h1 class="text-lg md:text-xl font-bold tracking-wide text-slate-900">PEMERINTAH KABUPATEN KUTAI BARAT</h1>
+                        <p class="text-sm font-semibold text-teal-600">DINAS KESEHATAN • UPTD PUSKESMAS TERING SEBERANG</p>
+                        <p class="text-xs text-slate-500 mt-1">JL. Kapten Tausin RT.I Tering Seberang Kec. Tering Kode Pos 75566</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="bg-teal-50 border border-teal-200 rounded-lg px-4 py-2 text-center">
+                        <span class="text-xs font-bold text-teal-800 block">TAHUN ANGGARAN</span>
+                        <span class="text-lg font-black text-teal-600">2026</span>
+                    </div>
+                    <!-- TOMBOL LOGOUT -->
+                    <button onclick="logout()" class="text-sm font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg px-3 py-2 transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-right-from-bracket"></i> <span class="hidden sm:inline">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- TAB NAVIGASI -->
+        <nav class="bg-white border-b border-slate-200 px-4 md:px-8">
+            <div class="max-w-7xl mx-auto flex gap-2 overflow-x-auto">
+                <button onclick="switchTab('harian')" id="btn-tab-harian" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-teal-600 text-teal-600 whitespace-nowrap">
+                    <i class="fa-solid fa-file-invoice mr-1"></i> Uraian Harian
+                </button>
+                <button onclick="switchTab('bulanan')" id="btn-tab-bulanan" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 whitespace-nowrap">
+                    <i class="fa-solid fa-chart-pie mr-1"></i> Dashboard Bulanan
+                </button>
+                <button onclick="switchTab('sts')" id="btn-tab-sts" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 whitespace-nowrap">
+                    <i class="fa-solid fa-receipt mr-1"></i> Data STS BPK
+                </button>
+            </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
+
+            <!-- ==================== TAB: HARIAN ==================== -->
+            <div id="tab-harian" class="tab-content space-y-8">
+
+                <!-- Panel Cetak Laporan BPK -->
+                <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-folder-open text-teal-600"></i> Panel Cetak Laporan Keuangan & Audit BPK
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <button onclick="exportTemplateKonfirmasiBPK()" class="cursor-pointer bg-blue-700 hover:bg-blue-800 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
+                            <i class="fa-solid fa-file-shield mr-2"></i> 1. Form Konfirmasi BPK 2026
+                        </button>
+                        <button onclick="exportPersisExcel()" class="cursor-pointer bg-teal-700 hover:bg-teal-800 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
+                            <i class="fa-solid fa-file-excel mr-2"></i> 2. Uraian Harian (XLSX)
+                        </button>
+                        <button onclick="exportExcelBulanan()" class="cursor-pointer bg-amber-700 hover:bg-amber-800 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
+                            <i class="fa-solid fa-chart-bar mr-2"></i> 3. Rekap Bulanan
+                        </button>
+                        <button onclick="document.getElementById('fileImport').click()" class="cursor-pointer bg-slate-700 hover:bg-slate-800 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
+                            <i class="fa-solid fa-file-import mr-2"></i> 4. Import Excel/CSV/TXT
+                        </button>
+                        <input type="file" id="fileImport" accept=".xlsx,.xls,.csv,.txt" class="hidden" onchange="handleImportFile(event)">
+                    </div>
+                </section>
+
+                <!-- Formulir Input Pasien -->
+                <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square text-teal-600"></i> Formulir Entri Data & Tindakan Pasien
+                    </h2>
+                    <form onsubmit="event.preventDefault(); simpanFormPasien();" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Tanggal Periksa</label>
+                                <input type="date" id="form-tanggal" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-teal-500 focus:ring-2 focus:ring-teal-100">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Jenis Pelayanan</label>
+                                <select id="form-jenis" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-teal-500 focus:ring-2 focus:ring-teal-100">
+                                    <option value="RJ">RJ (Rawat Jalan)</option>
+                                    <option value="RI">RI (Rawat Inap)</option>
+                                    <option value="RL">RL (Rawat Rumah)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Nama Pasien</label>
+                                <input type="text" id="form-nama" required placeholder="Cth: ARBIANSYAH/41" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-teal-500 focus:ring-2 focus:ring-teal-100">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Alamat</label>
+                                <input type="text" id="form-alamat" required placeholder="Cth: MUJAN RT 3" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-teal-500 focus:ring-2 focus:ring-teal-100">
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Jenis Pelayanan</label>
-                            <select id="form-jenis" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-teal-500 focus:ring-2 focus:ring-teal-100">
-                                <option value="RJ">RJ (Rawat Jalan)</option>
-                                <option value="RI">RI (Rawat Inap)</option>
-                                <option value="RL">RL (Rawat Rumah)</option>
-                            </select>
+
+                        <!-- Tabel Dinamis Therapy -->
+                        <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-600 font-semibold text-xs tracking-wider uppercase border-b border-slate-200">
+                                        <th class="p-3">Nama Obat / BHP / Tindakan Therapy</th>
+                                        <th class="p-3 w-40">Jasa Sarana (Rp)</th>
+                                        <th class="p-3 w-40">Jasa Pelayanan (Rp)</th>
+                                        <th class="p-3 w-20 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-therapy" class="divide-y divide-slate-100"></tbody>
+                            </table>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Nama Pasien</label>
-                            <input type="text" id="form-nama" required placeholder="Cth: ARBIANSYAH/41" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-teal-500 focus:ring-2 focus:ring-teal-100">
+
+                        <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <button type="button" onclick="tambahBarisTherapy()" class="cursor-pointer text-sm font-semibold text-teal-600 hover:text-teal-700 flex items-center gap-1">
+                                <i class="fa-solid fa-plus"></i> Tambah Item Tindakan
+                            </button>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="resetDataHarian()" class="cursor-pointer bg-rose-100 hover:bg-rose-200 text-rose-700 text-sm font-semibold rounded-lg px-4 py-2.5">
+                                    <i class="fa-solid fa-trash mr-1"></i> Reset Data
+                                </button>
+                                <button type="submit" class="cursor-pointer bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg px-6 py-2.5 shadow-sm">
+                                    <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Transaksi Pasien
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Alamat</label>
-                            <input type="text" id="form-alamat" required placeholder="Cth: MUJAN RT 3" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-teal-500 focus:ring-2 focus:ring-teal-100">
+                    </form>
+                </section>
+
+                <!-- Tabel Uraian Harian -->
+                <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-table-list text-teal-600"></i> Data Uraian Harian Pasien
+                        </h2>
+                        <div class="flex gap-2">
+                            <button onclick="window.print()" class="cursor-pointer text-sm font-semibold text-slate-700 hover:text-slate-900 border border-slate-300 rounded-lg px-3 py-1.5">
+                                <i class="fa-solid fa-print mr-1"></i> Print PDF
+                            </button>
                         </div>
                     </div>
-
-                    <!-- Tabel Dinamis Therapy -->
-                    <div class="overflow-x-auto border border-slate-200 rounded-lg">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 text-slate-600 font-semibold text-xs tracking-wider uppercase border-b border-slate-200">
-                                    <th class="p-3">Nama Obat / BHP / Tindakan Therapy</th>
-                                    <th class="p-3 w-40">Jasa Sarana (Rp)</th>
-                                    <th class="p-3 w-40">Jasa Pelayanan (Rp)</th>
-                                    <th class="p-3 w-20 text-center">Aksi</th>
+                    <div class="overflow-x-auto max-h-[600px] border border-slate-200 rounded-lg">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="sticky top-0 z-10">
+                                <tr class="bg-slate-100 text-slate-700 font-semibold uppercase tracking-wide border-b border-slate-200">
+                                    <th class="p-2 border-r border-slate-200">TANGGAL</th>
+                                    <th class="p-2 border-r border-slate-200 text-center">NO</th>
+                                    <th class="p-2 border-r border-slate-200">NAMA PASIEN</th>
+                                    <th class="p-2 border-r border-slate-200">ALAMAT</th>
+                                    <th class="p-2 border-r border-slate-200 text-center">JENIS</th>
+                                    <th class="p-2 border-r border-slate-200">THERAPY</th>
+                                    <th class="p-2 border-r border-slate-200 text-right">JASA SARANA</th>
+                                    <th class="p-2 border-r border-slate-200 text-right">JASA PELAYANAN</th>
+                                    <th class="p-2 text-right">TOTAL</th>
                                 </tr>
                             </thead>
-                            <tbody id="tbody-therapy" class="divide-y divide-slate-100"></tbody>
+                            <tbody id="tbody-utama" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
+                </section>
+            </div>
 
-                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <button type="button" onclick="tambahBarisTherapy()" class="cursor-pointer text-sm font-semibold text-teal-600 hover:text-teal-700 flex items-center gap-1">
-                            <i class="fa-solid fa-plus"></i> Tambah Item Tindakan
+            <!-- ==================== TAB: BULANAN ==================== -->
+            <div id="tab-bulanan" class="tab-content hidden space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
+                        <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-2xl"><i class="fa-solid fa-wallet"></i></div>
+                        <div>
+                            <h3 class="text-sm text-slate-500 font-semibold">Total Penerimaan Setahun</h3>
+                            <p id="total-penerimaan" class="text-xl font-bold text-slate-900">Rp 0</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
+                        <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-2xl"><i class="fa-solid fa-users"></i></div>
+                        <div>
+                            <h3 class="text-sm text-slate-500 font-semibold">Total Pasien Setahun</h3>
+                            <p id="total-pasien" class="text-xl font-bold text-slate-900">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="text-base font-bold text-slate-900 mb-4">Grafik Penerimaan Bulanan</h3>
+                    <canvas id="chart-penerimaan" height="80"></canvas>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-base font-bold text-slate-900">Rekap Data Bulanan</h3>
+                        <button onclick="exportExcelBulanan()" class="cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg px-4 py-2">
+                            <i class="fa-solid fa-file-excel mr-1"></i> Export Excel
                         </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 font-semibold uppercase text-xs border-b border-slate-200">
+                                    <th class="p-3">Bulan</th>
+                                    <th class="p-3 text-center">Jumlah Pasien</th>
+                                    <th class="p-3 text-right">Jasa Sarana</th>
+                                    <th class="p-3 text-right">Jasa Pelayanan</th>
+                                    <th class="p-3 text-right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-bulanan" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TAB: STS ==================== -->
+            <div id="tab-sts" class="tab-content hidden space-y-6">
+                <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-receipt text-teal-600"></i> Data Surat Tanda Setor (STS)
+                        </h2>
                         <div class="flex gap-2">
-                            <button type="button" onclick="resetDataHarian()" class="cursor-pointer bg-rose-100 hover:bg-rose-200 text-rose-700 text-sm font-semibold rounded-lg px-4 py-2.5">
-                                <i class="fa-solid fa-trash mr-1"></i> Reset Data
-                            </button>
-                            <button type="submit" class="cursor-pointer bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg px-6 py-2.5 shadow-sm">
-                                <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Transaksi Pasien
+                            <button onclick="exportSTS()" class="cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg px-4 py-2">
+                                <i class="fa-solid fa-file-excel mr-1"></i> Export STS
                             </button>
                         </div>
                     </div>
-                </form>
-            </section>
-
-            <!-- Tabel Uraian Harian -->
-            <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <i class="fa-solid fa-table-list text-teal-600"></i> Data Uraian Harian Pasien
-                    </h2>
-                    <div class="flex gap-2">
-                        <button onclick="window.print()" class="cursor-pointer text-sm font-semibold text-slate-700 hover:text-slate-900 border border-slate-300 rounded-lg px-3 py-1.5">
-                            <i class="fa-solid fa-print mr-1"></i> Print PDF
-                        </button>
+                    <div class="overflow-x-auto max-h-[600px] border border-slate-200 rounded-lg">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="sticky top-0 z-10">
+                                <tr class="bg-slate-100 text-slate-700 font-semibold uppercase border-b border-slate-200">
+                                    <th class="p-2 text-center">NO</th>
+                                    <th class="p-2">NOMOR STS</th>
+                                    <th class="p-2">NOMOR SIPD</th>
+                                    <th class="p-2">URAIAN</th>
+                                    <th class="p-2 text-center">TGL</th>
+                                    <th class="p-2 text-right">JUMLAH</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-sts" class="divide-y divide-slate-100"></tbody>
+                        </table>
                     </div>
-                </div>
-                <div class="overflow-x-auto max-h-[600px] border border-slate-200 rounded-lg">
-                    <table class="w-full text-left border-collapse text-xs">
-                        <thead class="sticky top-0 z-10">
-                            <tr class="bg-slate-100 text-slate-700 font-semibold uppercase tracking-wide border-b border-slate-200">
-                                <th class="p-2 border-r border-slate-200">TANGGAL</th>
-                                <th class="p-2 border-r border-slate-200 text-center">NO</th>
-                                <th class="p-2 border-r border-slate-200">NAMA PASIEN</th>
-                                <th class="p-2 border-r border-slate-200">ALAMAT</th>
-                                <th class="p-2 border-r border-slate-200 text-center">JENIS</th>
-                                <th class="p-2 border-r border-slate-200">THERAPY</th>
-                                <th class="p-2 border-r border-slate-200 text-right">JASA SARANA</th>
-                                <th class="p-2 border-r border-slate-200 text-right">JASA PELAYANAN</th>
-                                <th class="p-2 text-right">TOTAL</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbody-utama" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </section>
-        </div>
-
-        <!-- ==================== TAB: BULANAN ==================== -->
-        <div id="tab-bulanan" class="tab-content hidden space-y-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
-                    <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-2xl"><i class="fa-solid fa-wallet"></i></div>
-                    <div>
-                        <h3 class="text-sm text-slate-500 font-semibold">Total Penerimaan Setahun</h3>
-                        <p id="total-penerimaan" class="text-xl font-bold text-slate-900">Rp 0</p>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
-                    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-2xl"><i class="fa-solid fa-users"></i></div>
-                    <div>
-                        <h3 class="text-sm text-slate-500 font-semibold">Total Pasien Setahun</h3>
-                        <p id="total-pasien" class="text-xl font-bold text-slate-900">0</p>
-                    </div>
-                </div>
+                </section>
             </div>
-
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h3 class="text-base font-bold text-slate-900 mb-4">Grafik Penerimaan Bulanan</h3>
-                <canvas id="chart-penerimaan" height="80"></canvas>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-base font-bold text-slate-900">Rekap Data Bulanan</h3>
-                    <button onclick="exportExcelBulanan()" class="cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg px-4 py-2">
-                        <i class="fa-solid fa-file-excel mr-1"></i> Export Excel
-                    </button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-700 font-semibold uppercase text-xs border-b border-slate-200">
-                                <th class="p-3">Bulan</th>
-                                <th class="p-3 text-center">Jumlah Pasien</th>
-                                <th class="p-3 text-right">Jasa Sarana</th>
-                                <th class="p-3 text-right">Jasa Pelayanan</th>
-                                <th class="p-3 text-right">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbody-bulanan" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- ==================== TAB: STS ==================== -->
-        <div id="tab-sts" class="tab-content hidden space-y-6">
-            <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <i class="fa-solid fa-receipt text-teal-600"></i> Data Surat Tanda Setor (STS)
-                    </h2>
-                    <div class="flex gap-2">
-                        <button onclick="exportSTS()" class="cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg px-4 py-2">
-                            <i class="fa-solid fa-file-excel mr-1"></i> Export STS
-                        </button>
-                    </div>
-                </div>
-                <div class="overflow-x-auto max-h-[600px] border border-slate-200 rounded-lg">
-                    <table class="w-full text-left border-collapse text-xs">
-                        <thead class="sticky top-0 z-10">
-                            <tr class="bg-slate-100 text-slate-700 font-semibold uppercase border-b border-slate-200">
-                                <th class="p-2 text-center">NO</th>
-                                <th class="p-2">NOMOR STS</th>
-                                <th class="p-2">NOMOR SIPD</th>
-                                <th class="p-2">URAIAN</th>
-                                <th class="p-2 text-center">TGL</th>
-                                <th class="p-2 text-right">JUMLAH</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbody-sts" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </section>
-        </div>
-    </main>
+        </main>
+    </div> <!-- END MAIN APP -->
 
     <!-- ==================== SCRIPT LOGIC ==================== -->
     <script>
+        // ==========================================
+        // 1. LOGIKA LOGIN SEDERHANA
+        // ==========================================
+        const AKUN_VALID = {
+            username: 'admin',
+            password: 'pkmtering2026' // <-- GANTI PASSWORD DI SINI JIKA PERLU
+        };
+
+        function cekStatusLogin() {
+            const isLoggedIn = sessionStorage.getItem('isLoggedInPKM');
+            const loginScreen = document.getElementById('login-screen');
+            const mainApp = document.getElementById('main-app');
+
+            if (isLoggedIn === 'true') {
+                loginScreen.classList.add('hidden');
+                loginScreen.style.display = ''; // reset inline style
+                mainApp.style.display = 'block';
+            } else {
+                loginScreen.classList.remove('hidden');
+                loginScreen.style.display = 'flex';
+                mainApp.style.display = 'none';
+            }
+        }
+
+        function prosesLogin() {
+            const user = document.getElementById('login-username').value;
+            const pass = document.getElementById('login-password').value;
+
+            if (user === AKUN_VALID.username && pass === AKUN_VALID.password) {
+                sessionStorage.setItem('isLoggedInPKM', 'true');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Login Berhasil',
+                    text: 'Selamat datang di Sistem Retribusi PKM',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    cekStatusLogin();
+                });
+            } else {
+                Swal.fire('Gagal', 'Username atau Password salah!', 'error');
+            }
+        }
+
+        function logout() {
+            Swal.fire({
+                title: 'Logout?',
+                text: "Anda akan keluar dari sistem",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444',
+                confirmButtonText: 'Ya, Keluar',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    sessionStorage.removeItem('isLoggedInPKM');
+                    window.location.reload();
+                }
+            });
+        }
+
         // =====================================================================
-        // 1. MASTER DATA THERAPY
+        // 2. MASTER DATA THERAPY
         // =====================================================================
         const MASTER_THERAPY = [
             { nama: 'PENGOBATAN UMUM', sarana: 8100, pelayanan: 5400 },
@@ -328,7 +430,7 @@
         ];
 
         // =====================================================================
-        // 2. STATE GLOBAL (Penyimpanan via localStorage)
+        // 3. STATE GLOBAL (Penyimpanan via localStorage)
         // =====================================================================
         let dataPasien   = JSON.parse(localStorage.getItem('dataUraianHarian')) || [];
         let dataBulanan  = JSON.parse(localStorage.getItem('dataBulananPKM'))    || [];
@@ -337,7 +439,7 @@
         let chartInstance = null;
 
         // =====================================================================
-        // 3. HELPER FUNCTIONS
+        // 4. HELPER FUNCTIONS
         // =====================================================================
         const formatRupiahWeb = (angka) => {
             if (!angka || isNaN(angka) || angka === 0) return '-';
@@ -357,14 +459,10 @@
         const parseTanggalString = (str) => {
             if (!str || str === '#REF!') return new Date().toISOString().split('T')[0];
             
-            // Handle format "02 January 2026" atau "02-Jan-2026"
             const d = new Date(str);
             if (!isNaN(d.getTime())) {
-                // Jika formatnya dd/mm/yyyy, JS Date bisa salah persepsi (anggap mm/dd)
-                // Kita cek dulu apakah ada string '/' dan panjang tahun 4.
                 const parts = String(str).split('/');
                 if (parts.length === 3 && parts[2].length === 4) {
-                     // Asumsi input dari Excel adalah dd/mm/yyyy
                      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
                 }
                 return d.toISOString().split('T')[0];
@@ -382,13 +480,12 @@
         const cleanCurrency = (val) => {
             if (val === null || val === undefined || val === '') return 0;
             if (typeof val === 'number') return val;
-            // Hapus "Rp", spasi, dan koma (pemisah ribuan)
             const str = String(val).replace(/Rp/gi, '').replace(/\s/g, '').replace(/,/g, '');
             return parseFloat(str) || 0;
         };
 
         // =====================================================================
-        // 4. TAB NAVIGATION
+        // 5. TAB NAVIGATION
         // =====================================================================
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -411,7 +508,7 @@
         }
 
         // =====================================================================
-        // 5. FORM DINAMIS THERAPY
+        // 6. FORM DINAMIS THERAPY
         // =====================================================================
         function tambahBarisTherapy(data = { nama: '', sarana: '', pelayanan: '' }) {
             currentTherapyIndex++;
@@ -481,7 +578,7 @@
         }
 
         // =====================================================================
-        // 6. SIMPAN FORM PASIEN HARIAN
+        // 7. SIMPAN FORM PASIEN HARIAN
         // =====================================================================
         function simpanFormPasien() {
             const tanggal = document.getElementById('form-tanggal').value;
@@ -522,7 +619,6 @@
             dataPasien.push({ id: Date.now(), tanggal, nama, alamat, jenis, therapies });
             localStorage.setItem('dataUraianHarian', JSON.stringify(dataPasien));
 
-            // Reset form
             document.getElementById('form-nama').value = '';
             document.getElementById('form-alamat').value = '';
             document.getElementById('tbody-therapy').innerHTML = '';
@@ -534,7 +630,7 @@
         }
 
         // =====================================================================
-        // 7. RENDER TABEL HARIAN
+        // 8. RENDER TABEL HARIAN
         // =====================================================================
         function renderTabelHarian() {
             const tbody = document.getElementById('tbody-utama');
@@ -580,7 +676,6 @@
                     nomorUrut++;
                 });
 
-                // Subtotal Harian
                 const trSub = document.createElement('tr');
                 trSub.className = 'bg-slate-50 font-semibold text-slate-700';
                 trSub.innerHTML = `
@@ -595,7 +690,6 @@
                 grandPelayanan += totalPelayananHari;
             });
 
-            // Grand Total
             const trGrand = document.createElement('tr');
             trGrand.className = 'bg-teal-50 font-bold text-teal-900';
             trGrand.innerHTML = `
@@ -608,7 +702,7 @@
         }
 
         // =====================================================================
-        // 8. IMPORT FILE (XLSX / CSV / TXT) — Auto Detect Format
+        // 9. IMPORT FILE
         // =====================================================================
         function handleImportFile(event) {
             const file = event.target.files[0];
@@ -633,12 +727,10 @@
                 let text = e.target.result;
                 if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
                 
-                // Coba tebak separator (koma atau tab)
                 const lines = text.split(/\r?\n/);
                 let isTSV = false;
                 if (lines.length > 0 && lines[0].includes('\t')) isTSV = true;
                 
-                // Gunakan XLSX untuk memparse string
                 let workbook;
                 if (isTSV) {
                     workbook = XLSX.read(text, { type: 'string', FS: '\t' });
@@ -704,7 +796,6 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // --- Parser Uraian Harian ---
         function importUraianHarian(rows) {
             let importedData = [];
             let currentPatient = null;
@@ -768,7 +859,6 @@
             return importedData.length;
         }
 
-        // --- Parser Rekapan Bulanan ---
         function importRekapanBulanan(rows) {
             let imported = [];
             let isData = false;
@@ -807,18 +897,16 @@
             }
         }
 
-        // --- Parser STS (Smart Detection) ---
         function importSTS(rows) {
             let imported = [];
             let isHeaderFound = false;
             let counter = 1;
-            let mode = 'DAFTAR'; // Default
+            let mode = 'DAFTAR';
 
             for (let i = 0; i < rows.length; i++) {
                 const row = rows[i].map(c => String(c || '').toUpperCase().trim());
                 const rowStr = row.join(' ');
 
-                // Deteksi Header
                 if (rowStr.includes('NOMOR STS') && rowStr.includes('URAIAN')) {
                     isHeaderFound = true;
                     mode = 'DAFTAR';
@@ -836,7 +924,7 @@
                 }
 
                 if (!isHeaderFound) continue;
-                if (rowStr.includes('TOTAL') || rowStr.includes('JUMLAH')) break; // Stop at total
+                if (rowStr.includes('TOTAL') || rowStr.includes('JUMLAH')) break;
 
                 let nomorSTS = '', nomorSIPD = '', uraian = '', tglStr = '', tglSetorStr = '', jumlah = 0;
 
@@ -852,11 +940,10 @@
                     nomorSIPD = rows[i][2];
                     jumlah = rows[i][3];
                     tglStr = rows[i][4];
-                    tglSetorStr = rows[i][6]; // Kolom terakhir adalah Hingga Tanggal
-                    uraian = 'Setoran Retribusi Pelayanan Kesehatan'; // Fallback
+                    tglSetorStr = rows[i][6];
+                    uraian = 'Setoran Retribusi Pelayanan Kesehatan';
                 }
 
-                // Validasi: Skip error #REF! atau baris kosong
                 if (!nomorSTS || String(nomorSTS).includes('#REF!') || String(nomorSTS).trim() === '') continue;
                 if (String(rows[i][0]).includes('#REF!')) continue;
 
@@ -885,7 +972,7 @@
         }
 
         // =====================================================================
-        // 9. RENDER DASHBOARD BULANAN
+        // 10. RENDER DASHBOARD BULANAN
         // =====================================================================
         function renderBulananUI() {
             const totalPenerimaan = dataBulanan.reduce((acc, x) => acc + x.total, 0);
@@ -941,7 +1028,7 @@
         }
 
         // =====================================================================
-        // 10. RENDER TABEL STS
+        // 11. RENDER TABEL STS
         // =====================================================================
         function renderTabelSTS() {
             const tbody = document.getElementById('tbody-sts');
@@ -977,7 +1064,7 @@
         }
 
         // =====================================================================
-        // 11. EXPORT EXCEL: URAIAN HARIAN
+        // 12. EXPORT EXCEL: URAIAN HARIAN
         // =====================================================================
         function exportPersisExcel() {
             if (dataPasien.length === 0) {
@@ -1055,7 +1142,7 @@
         }
 
         // =====================================================================
-        // 12. EXPORT EXCEL: REKAPAN BULANAN
+        // 13. EXPORT EXCEL: REKAPAN BULANAN
         // =====================================================================
         function exportExcelBulanan() {
             if (dataBulanan.length === 0) {
@@ -1093,7 +1180,7 @@
         }
 
         // =====================================================================
-        // 13. EXPORT EXCEL: STS
+        // 14. EXPORT EXCEL: STS
         // =====================================================================
         function exportSTS() {
             if (dataSTS.length === 0) {
@@ -1126,7 +1213,7 @@
         }
 
         // =====================================================================
-        // 14. EXPORT: FORM KONFIRMASI BPK
+        // 15. EXPORT: FORM KONFIRMASI BPK
         // =====================================================================
         function exportTemplateKonfirmasiBPK() {
             if (dataSTS.length === 0) {
@@ -1208,7 +1295,7 @@
         }
 
         // =====================================================================
-        // 15. RESET DATA HARIAN
+        // 16. RESET DATA HARIAN
         // =====================================================================
         function resetDataHarian() {
             Swal.fire({
@@ -1230,13 +1317,18 @@
         }
 
         // =====================================================================
-        // 16. INITIALIZATION
+        // 17. INITIALIZATION
         // =====================================================================
         document.addEventListener('DOMContentLoaded', function () {
+            // Cek Login Terlebih Dahulu
+            cekStatusLogin();
+
+            // Setup Tanggal
             const today = new Date().toISOString().split('T')[0];
             const inputTgl = document.getElementById('form-tanggal');
             if (inputTgl) inputTgl.value = today;
 
+            // Inisialisasi Form & Data
             tambahBarisTherapy();
             renderTabelHarian();
             renderBulananUI();
