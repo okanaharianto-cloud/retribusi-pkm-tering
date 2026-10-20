@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SI-RETRIBUSI UPTD PKM Tering Seberang</title>
+    
+    <!-- PWA Setup -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d9488">
+    <link rel="apple-touch-icon" href="logo.png">
 
     <!-- Framework Visual -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,9 +27,7 @@
     <div id="login-screen" class="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
             <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-                    <i class="fa-solid fa-lock"></i>
-                </div>
+                <img src="logo.png" alt="Logo" class="w-20 h-20 mx-auto mb-4 object-contain" onerror="this.style.display='none'">
                 <h2 class="text-2xl font-bold text-slate-800">Login Sistem</h2>
                 <p class="text-sm text-slate-500 mt-1">UPTD PKM Tering Seberang</p>
             </div>
@@ -53,7 +56,7 @@
         <header class="bg-white border-b border-slate-200 py-6 px-4 md:px-8 shadow-sm">
             <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
                 <div class="text-center md:text-left flex items-center gap-4">
-                    <!-- Logo bisa ditambahkan di sini -->
+                    <img src="logo.png" alt="Logo" class="w-14 h-14 object-contain hidden md:block" onerror="this.style.display='none'">
                     <div>
                         <h1 class="text-lg md:text-xl font-bold tracking-wide text-slate-900">PEMERINTAH KABUPATEN KUTAI BARAT</h1>
                         <p class="text-sm font-semibold text-teal-600">DINAS KESEHATAN • UPTD PUSKESMAS TERING SEBERANG</p>
@@ -61,10 +64,16 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
+                    <!-- Tombol Install App (PWA) -->
+                    <button id="install-app-btn" onclick="installApp()" class="hidden text-sm font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-lg px-3 py-2 shadow transition-colors animate-pulse">
+                        <i class="fa-solid fa-download mr-1"></i> Install App
+                    </button>
+                    
                     <div class="bg-teal-50 border border-teal-200 rounded-lg px-4 py-2 text-center">
                         <span class="text-xs font-bold text-teal-800 block">TAHUN ANGGARAN</span>
                         <span class="text-lg font-black text-teal-600">2026</span>
                     </div>
+                    
                     <!-- TOMBOL LOGOUT -->
                     <button onclick="logout()" class="text-sm font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg px-3 py-2 transition-colors flex items-center gap-2">
                         <i class="fa-solid fa-right-from-bracket"></i> <span class="hidden sm:inline">Logout</span>
@@ -92,30 +101,27 @@
 
             <!-- ==================== TAB: HARIAN ==================== -->
             <div id="tab-harian" class="tab-content space-y-8">
-
-                <!-- Panel Cetak Laporan BPK -->
                 <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                     <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                         <i class="fa-solid fa-folder-open text-teal-600"></i> Panel Cetak Laporan Keuangan & Audit BPK
                     </h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <button onclick="exportTemplateKonfirmasiBPK()" class="cursor-pointer bg-blue-700 hover:bg-blue-800 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
-                            <i class="fa-solid fa-file-shield mr-2"></i> 1. Form Konfirmasi BPK 2026
+                        <button onclick="exportTemplateKonfirmasiBPK()" class="cursor-pointer bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-800 hover:to-blue-700 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
+                            <i class="fa-solid fa-file-shield mr-2"></i> 1. Form Konfirmasi BPK
                         </button>
-                        <button onclick="exportPersisExcel()" class="cursor-pointer bg-teal-700 hover:bg-teal-800 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
-                            <i class="fa-solid fa-file-excel mr-2"></i> 2. Uraian Harian (XLSX)
+                        <button onclick="exportPersisExcel()" class="cursor-pointer bg-gradient-to-r from-teal-700 to-teal-600 hover:from-teal-800 hover:to-teal-700 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
+                            <i class="fa-solid fa-file-excel mr-2"></i> 2. Uraian Harian
                         </button>
-                        <button onclick="exportExcelBulanan()" class="cursor-pointer bg-amber-700 hover:bg-amber-800 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
+                        <button onclick="exportExcelBulanan()" class="cursor-pointer bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
                             <i class="fa-solid fa-chart-bar mr-2"></i> 3. Rekap Bulanan
                         </button>
-                        <button onclick="document.getElementById('fileImport').click()" class="cursor-pointer bg-slate-700 hover:bg-slate-800 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
-                            <i class="fa-solid fa-file-import mr-2"></i> 4. Import Excel/CSV/TXT
+                        <button onclick="document.getElementById('fileImport').click()" class="cursor-pointer bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-800 hover:to-slate-700 text-white font-medium text-sm rounded-lg px-5 py-3 transition-colors shadow-sm">
+                            <i class="fa-solid fa-file-import mr-2"></i> 4. Import Excel/TXT
                         </button>
                         <input type="file" id="fileImport" accept=".xlsx,.xls,.csv,.txt" class="hidden" onchange="handleImportFile(event)">
                     </div>
                 </section>
 
-                <!-- Formulir Input Pasien -->
                 <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                     <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                         <i class="fa-solid fa-pen-to-square text-teal-600"></i> Formulir Entri Data & Tindakan Pasien
@@ -143,8 +149,6 @@
                                 <input type="text" id="form-alamat" required placeholder="Cth: MUJAN RT 3" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-teal-500 focus:ring-2 focus:ring-teal-100">
                             </div>
                         </div>
-
-                        <!-- Tabel Dinamis Therapy -->
                         <div class="overflow-x-auto border border-slate-200 rounded-lg">
                             <table class="w-full text-left border-collapse">
                                 <thead>
@@ -158,7 +162,6 @@
                                 <tbody id="tbody-therapy" class="divide-y divide-slate-100"></tbody>
                             </table>
                         </div>
-
                         <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                             <button type="button" onclick="tambahBarisTherapy()" class="cursor-pointer text-sm font-semibold text-teal-600 hover:text-teal-700 flex items-center gap-1">
                                 <i class="fa-solid fa-plus"></i> Tambah Item Tindakan
@@ -168,24 +171,21 @@
                                     <i class="fa-solid fa-trash mr-1"></i> Reset Data
                                 </button>
                                 <button type="submit" class="cursor-pointer bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg px-6 py-2.5 shadow-sm">
-                                    <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Transaksi Pasien
+                                    <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Pasien
                                 </button>
                             </div>
                         </div>
                     </form>
                 </section>
 
-                <!-- Tabel Uraian Harian -->
                 <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                         <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
                             <i class="fa-solid fa-table-list text-teal-600"></i> Data Uraian Harian Pasien
                         </h2>
-                        <div class="flex gap-2">
-                            <button onclick="window.print()" class="cursor-pointer text-sm font-semibold text-slate-700 hover:text-slate-900 border border-slate-300 rounded-lg px-3 py-1.5">
-                                <i class="fa-solid fa-print mr-1"></i> Print PDF
-                            </button>
-                        </div>
+                        <button onclick="window.print()" class="cursor-pointer text-sm font-semibold text-slate-700 hover:text-slate-900 border border-slate-300 rounded-lg px-3 py-1.5">
+                            <i class="fa-solid fa-print mr-1"></i> Print PDF
+                        </button>
                     </div>
                     <div class="overflow-x-auto max-h-[600px] border border-slate-200 rounded-lg">
                         <table class="w-full text-left border-collapse text-xs">
@@ -208,33 +208,46 @@
                 </section>
             </div>
 
-            <!-- ==================== TAB: BULANAN ==================== -->
+            <!-- ==================== TAB: BULANAN (DASHBOARD MENARIK) ==================== -->
             <div id="tab-bulanan" class="tab-content hidden space-y-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
-                        <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-2xl"><i class="fa-solid fa-wallet"></i></div>
-                        <div>
-                            <h3 class="text-sm text-slate-500 font-semibold">Total Penerimaan Setahun</h3>
-                            <p id="total-penerimaan" class="text-xl font-bold text-slate-900">Rp 0</p>
-                        </div>
+                <!-- Kartu Ringkasan -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
+                        <i class="fa-solid fa-wallet absolute -right-4 -bottom-4 text-6xl opacity-20"></i>
+                        <h3 class="text-sm font-semibold opacity-90">Total Penerimaan</h3>
+                        <p id="total-penerimaan" class="text-3xl font-black mt-2">Rp 0</p>
+                        <p class="text-xs mt-2 opacity-80"><i class="fa-solid fa-calendar-check mr-1"></i> Tahun Anggaran 2026</p>
                     </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-center gap-4">
-                        <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-2xl"><i class="fa-solid fa-users"></i></div>
-                        <div>
-                            <h3 class="text-sm text-slate-500 font-semibold">Total Pasien Setahun</h3>
-                            <p id="total-pasien" class="text-xl font-bold text-slate-900">0</p>
-                        </div>
+                    <div class="bg-gradient-to-br from-emerald-500 to-teal-700 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
+                        <i class="fa-solid fa-users absolute -right-4 -bottom-4 text-6xl opacity-20"></i>
+                        <h3 class="text-sm font-semibold opacity-90">Total Pasien</h3>
+                        <p id="total-pasien" class="text-3xl font-black mt-2">0</p>
+                        <p class="text-xs mt-2 opacity-80"><i class="fa-solid fa-notes-medical mr-1"></i> Kunjungan Terlayani</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
+                        <i class="fa-solid fa-chart-line absolute -right-4 -bottom-4 text-6xl opacity-20"></i>
+                        <h3 class="text-sm font-semibold opacity-90">Rata-rata / Bulan</h3>
+                        <p id="rata-rata-bulan" class="text-3xl font-black mt-2">Rp 0</p>
+                        <p class="text-xs mt-2 opacity-80"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Pendapatan Rata-rata</p>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <h3 class="text-base font-bold text-slate-900 mb-4">Grafik Penerimaan Bulanan</h3>
-                    <canvas id="chart-penerimaan" height="80"></canvas>
+                <!-- Grafik Ganda -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <h3 class="text-base font-bold text-slate-900 mb-4"><i class="fa-solid fa-chart-area text-teal-600 mr-2"></i> Grafik Pendapatan</h3>
+                        <canvas id="chart-penerimaan" height="120"></canvas>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <h3 class="text-base font-bold text-slate-900 mb-4"><i class="fa-solid fa-chart-bar text-blue-600 mr-2"></i> Grafik Kunjungan Pasien</h3>
+                        <canvas id="chart-pasien" height="120"></canvas>
+                    </div>
                 </div>
 
+                <!-- Tabel Rekap -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-base font-bold text-slate-900">Rekap Data Bulanan</h3>
+                        <h3 class="text-base font-bold text-slate-900">Rincian Rekap Bulanan</h3>
                         <button onclick="exportExcelBulanan()" class="cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg px-4 py-2">
                             <i class="fa-solid fa-file-excel mr-1"></i> Export Excel
                         </button>
@@ -247,7 +260,7 @@
                                     <th class="p-3 text-center">Jumlah Pasien</th>
                                     <th class="p-3 text-right">Jasa Sarana</th>
                                     <th class="p-3 text-right">Jasa Pelayanan</th>
-                                    <th class="p-3 text-right">Total</th>
+                                    <th class="p-3 text-right">Total Pendapatan</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-bulanan" class="divide-y divide-slate-100"></tbody>
@@ -263,11 +276,9 @@
                         <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
                             <i class="fa-solid fa-receipt text-teal-600"></i> Data Surat Tanda Setor (STS)
                         </h2>
-                        <div class="flex gap-2">
-                            <button onclick="exportSTS()" class="cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg px-4 py-2">
-                                <i class="fa-solid fa-file-excel mr-1"></i> Export STS
-                            </button>
-                        </div>
+                        <button onclick="exportSTS()" class="cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg px-4 py-2">
+                            <i class="fa-solid fa-file-excel mr-1"></i> Export STS
+                        </button>
                     </div>
                     <div class="overflow-x-auto max-h-[600px] border border-slate-200 rounded-lg">
                         <table class="w-full text-left border-collapse text-xs">
@@ -292,12 +303,9 @@
     <!-- ==================== SCRIPT LOGIC ==================== -->
     <script>
         // ==========================================
-        // 1. LOGIKA LOGIN SEDERHANA
+        // 1. LOGIKA LOGIN & PWA
         // ==========================================
-        const AKUN_VALID = {
-            username: 'admin',
-            password: 'pkmtering2026' // <-- GANTI PASSWORD DI SINI JIKA PERLU
-        };
+        const AKUN_VALID = { username: 'admin', password: 'pkmtering2026' };
 
         function cekStatusLogin() {
             const isLoggedIn = sessionStorage.getItem('isLoggedInPKM');
@@ -306,7 +314,7 @@
 
             if (isLoggedIn === 'true') {
                 loginScreen.classList.add('hidden');
-                loginScreen.style.display = ''; // reset inline style
+                loginScreen.style.display = ''; 
                 mainApp.style.display = 'block';
             } else {
                 loginScreen.classList.remove('hidden');
@@ -321,15 +329,7 @@
 
             if (user === AKUN_VALID.username && pass === AKUN_VALID.password) {
                 sessionStorage.setItem('isLoggedInPKM', 'true');
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Login Berhasil',
-                    text: 'Selamat datang di Sistem Retribusi PKM',
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-                    cekStatusLogin();
-                });
+                Swal.fire({ icon: 'success', title: 'Login Berhasil', timer: 1500, showConfirmButton: false }).then(() => cekStatusLogin());
             } else {
                 Swal.fire('Gagal', 'Username atau Password salah!', 'error');
             }
@@ -337,18 +337,47 @@
 
         function logout() {
             Swal.fire({
-                title: 'Logout?',
-                text: "Anda akan keluar dari sistem",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#EF4444',
-                confirmButtonText: 'Ya, Keluar',
-                cancelButtonText: 'Batal'
+                title: 'Logout?', text: "Anda akan keluar dari sistem", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#EF4444', confirmButtonText: 'Ya, Keluar', cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
                     sessionStorage.removeItem('isLoggedInPKM');
                     window.location.reload();
                 }
+            });
+        }
+
+        // PWA Install Prompt Logic
+        let deferredPrompt;
+        const installBtn = document.getElementById('install-app-btn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.classList.remove('hidden'); // Tampilkan tombol install
+        });
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the A2HS prompt');
+                    } else {
+                        console.log('User dismissed the A2HS prompt');
+                    }
+                    deferredPrompt = null;
+                    installBtn.classList.add('hidden');
+                });
+            }
+        }
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => console.log('SW registered: ', registration))
+                    .catch(registrationError => console.log('SW registration failed: ', registrationError));
             });
         }
 
@@ -437,6 +466,7 @@
         let dataSTS      = JSON.parse(localStorage.getItem('dataSTS'))           || [];
         let currentTherapyIndex = 0;
         let chartInstance = null;
+        let chartPasienInstance = null;
 
         // =====================================================================
         // 4. HELPER FUNCTIONS
@@ -458,7 +488,6 @@
         
         const parseTanggalString = (str) => {
             if (!str || str === '#REF!') return new Date().toISOString().split('T')[0];
-            
             const d = new Date(str);
             if (!isNaN(d.getTime())) {
                 const parts = String(str).split('/');
@@ -467,12 +496,10 @@
                 }
                 return d.toISOString().split('T')[0];
             }
-
             const parts = String(str).split('/');
             if (parts.length === 3 && parts[2].length >= 4) {
                 return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
             }
-            
             if (String(str).includes('-')) return String(str);
             return new Date().toISOString().split('T')[0];
         };
@@ -493,7 +520,6 @@
                 el.classList.remove('border-teal-600', 'text-teal-600');
                 el.classList.add('border-transparent', 'text-slate-500');
             });
-
             const tab = document.getElementById(`tab-${tabName}`);
             const btn = document.getElementById(`btn-tab-${tabName}`);
             if (tab) tab.classList.remove('hidden');
@@ -501,7 +527,6 @@
                 btn.classList.remove('border-transparent', 'text-slate-500');
                 btn.classList.add('border-teal-600', 'text-teal-600');
             }
-
             if (tabName === 'bulanan') renderBulananUI();
             if (tabName === 'sts')     renderTabelSTS();
             if (tabName === 'harian')  renderTabelHarian();
@@ -514,17 +539,13 @@
             currentTherapyIndex++;
             const tbody = document.getElementById('tbody-therapy');
             if (!tbody) return;
-
             const tr = document.createElement('tr');
             tr.id = `therapy-row-${currentTherapyIndex}`;
             tr.className = 'hover:bg-slate-50 transition-colors';
-
             const options = MASTER_THERAPY.map(t =>
                 `<option value="${t.nama}" data-sarana="${t.sarana}" data-pelayanan="${t.pelayanan}" ${data.nama === t.nama ? 'selected' : ''}>${t.nama}</option>`
             ).join('');
-
             const isLainnya = data.nama && !MASTER_THERAPY.find(t => t.nama === data.nama);
-
             tr.innerHTML = `
                 <td class="p-2 align-top">
                     <select class="t-nama w-full border border-slate-300 rounded-md px-2 py-1.5 text-sm" onchange="autoFillHarga(this)">
@@ -534,40 +555,28 @@
                     </select>
                     <input type="text" class="t-nama-manual ${isLainnya ? '' : 'hidden'} mt-1 w-full border border-slate-300 rounded-md px-2 py-1.5 text-sm" placeholder="Nama therapy manual" value="${isLainnya ? data.nama : ''}">
                 </td>
-                <td class="p-2 align-top">
-                    <input type="number" class="t-sarana w-full border border-slate-300 rounded-md px-2 py-1.5 text-sm text-right" value="${data.sarana || ''}" placeholder="8100" ${isLainnya ? '' : 'readonly'}>
-                </td>
-                <td class="p-2 align-top">
-                    <input type="number" class="t-pelayanan w-full border border-slate-300 rounded-md px-2 py-1.5 text-sm text-right" value="${data.pelayanan || ''}" placeholder="5400" ${isLainnya ? '' : 'readonly'}>
-                </td>
-                <td class="p-2 align-top text-center">
-                    <button type="button" class="text-rose-600 hover:text-rose-800 text-sm" onclick="hapusBarisTherapy('therapy-row-${currentTherapyIndex}')">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </td>
+                <td class="p-2 align-top"><input type="number" class="t-sarana w-full border border-slate-300 rounded-md px-2 py-1.5 text-sm text-right" value="${data.sarana || ''}" placeholder="8100" ${isLainnya ? '' : 'readonly'}></td>
+                <td class="p-2 align-top"><input type="number" class="t-pelayanan w-full border border-slate-300 rounded-md px-2 py-1.5 text-sm text-right" value="${data.pelayanan || ''}" placeholder="5400" ${isLainnya ? '' : 'readonly'}></td>
+                <td class="p-2 align-top text-center"><button type="button" class="text-rose-600 hover:text-rose-800 text-sm" onclick="hapusBarisTherapy('therapy-row-${currentTherapyIndex}')"><i class="fa-solid fa-trash"></i></button></td>
             `;
             tbody.appendChild(tr);
         }
 
         function autoFillHarga(selectElement) {
             const row = selectElement.closest('tr');
-            const inputManual   = row.querySelector('.t-nama-manual');
-            const inputSarana   = row.querySelector('.t-sarana');
+            const inputManual = row.querySelector('.t-nama-manual');
+            const inputSarana = row.querySelector('.t-sarana');
             const inputPelayanan = row.querySelector('.t-pelayanan');
-
             if (selectElement.value === 'LAINNYA') {
                 inputManual.classList.remove('hidden');
-                inputSarana.value = '';
-                inputPelayanan.value = '';
-                inputSarana.removeAttribute('readonly');
-                inputPelayanan.removeAttribute('readonly');
+                inputSarana.value = ''; inputPelayanan.value = '';
+                inputSarana.removeAttribute('readonly'); inputPelayanan.removeAttribute('readonly');
                 inputSarana.focus();
             } else {
                 inputManual.classList.add('hidden');
-                inputSarana.setAttribute('readonly', true);
-                inputPelayanan.setAttribute('readonly', true);
+                inputSarana.setAttribute('readonly', true); inputPelayanan.setAttribute('readonly', true);
                 const opt = selectElement.options[selectElement.selectedIndex];
-                inputSarana.value   = opt.getAttribute('data-sarana')   || '';
+                inputSarana.value = opt.getAttribute('data-sarana') || '';
                 inputPelayanan.value = opt.getAttribute('data-pelayanan') || '';
             }
         }
@@ -585,46 +594,24 @@
             const jenis   = document.getElementById('form-jenis').value;
             const nama    = document.getElementById('form-nama').value.trim();
             const alamat  = document.getElementById('form-alamat').value.trim();
-
-            if (!tanggal || !nama) {
-                Swal.fire('Perhatian', 'Tanggal dan Nama Pasien wajib diisi.', 'warning');
-                return;
-            }
-
+            if (!tanggal || !nama) { Swal.fire('Perhatian', 'Tanggal dan Nama Pasien wajib diisi.', 'warning'); return; }
             const therapies = [];
             const rows = document.querySelectorAll('#tbody-therapy tr');
             rows.forEach(row => {
                 const selectEl = row.querySelector('.t-nama');
                 let namaTherapy = selectEl.value;
-                if (namaTherapy === 'LAINNYA') {
-                    namaTherapy = row.querySelector('.t-nama-manual').value.trim();
-                }
-                const sarana   = parseInt(row.querySelector('.t-sarana').value)   || 0;
+                if (namaTherapy === 'LAINNYA') namaTherapy = row.querySelector('.t-nama-manual').value.trim();
+                const sarana = parseInt(row.querySelector('.t-sarana').value) || 0;
                 const pelayanan = parseInt(row.querySelector('.t-pelayanan').value) || 0;
-
-                if (namaTherapy) {
-                    therapies.push({
-                        nama: namaTherapy,
-                        sarana, pelayanan,
-                        total: sarana + pelayanan
-                    });
-                }
+                if (namaTherapy) therapies.push({ nama: namaTherapy, sarana, pelayanan, total: sarana + pelayanan });
             });
-
-            if (therapies.length === 0) {
-                Swal.fire('Perhatian', 'Minimal isi 1 tindakan therapy.', 'warning');
-                return;
-            }
-
+            if (therapies.length === 0) { Swal.fire('Perhatian', 'Minimal isi 1 tindakan therapy.', 'warning'); return; }
             dataPasien.push({ id: Date.now(), tanggal, nama, alamat, jenis, therapies });
             localStorage.setItem('dataUraianHarian', JSON.stringify(dataPasien));
-
             document.getElementById('form-nama').value = '';
             document.getElementById('form-alamat').value = '';
             document.getElementById('tbody-therapy').innerHTML = '';
-            currentTherapyIndex = 0;
-            tambahBarisTherapy();
-
+            currentTherapyIndex = 0; tambahBarisTherapy();
             renderTabelHarian();
             Swal.fire({ icon: 'success', title: 'Tersimpan!', text: 'Data pasien berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
         }
@@ -636,24 +623,15 @@
             const tbody = document.getElementById('tbody-utama');
             if (!tbody) return;
             tbody.innerHTML = '';
-
             if (dataPasien.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-slate-400">Belum ada data. Silakan input manual atau import file Excel.</td></tr>';
                 return;
             }
-
             const grupTanggal = {};
-            dataPasien.forEach(p => {
-                if (!grupTanggal[p.tanggal]) grupTanggal[p.tanggal] = [];
-                grupTanggal[p.tanggal].push(p);
-            });
-
-            let nomorUrut = 1;
-            let grandSarana = 0, grandPelayanan = 0;
-
+            dataPasien.forEach(p => { if (!grupTanggal[p.tanggal]) grupTanggal[p.tanggal] = []; grupTanggal[p.tanggal].push(p); });
+            let nomorUrut = 1, grandSarana = 0, grandPelayanan = 0;
             Object.keys(grupTanggal).sort().forEach(tgl => {
                 let totalSaranaHari = 0, totalPelayananHari = 0;
-
                 grupTanggal[tgl].forEach(pasien => {
                     pasien.therapies.forEach((th, tIdx) => {
                         const tr = document.createElement('tr');
@@ -670,34 +648,19 @@
                             <td class="p-2 text-right">${formatRupiahWeb(th.total)}</td>
                         `;
                         tbody.appendChild(tr);
-                        totalSaranaHari    += th.sarana;
-                        totalPelayananHari += th.pelayanan;
+                        totalSaranaHari += th.sarana; totalPelayananHari += th.pelayanan;
                     });
                     nomorUrut++;
                 });
-
                 const trSub = document.createElement('tr');
                 trSub.className = 'bg-slate-50 font-semibold text-slate-700';
-                trSub.innerHTML = `
-                    <td colspan="6" class="p-2 border-r border-slate-100 text-center"></td>
-                    <td class="p-2 border-r border-slate-100 text-right">${formatRupiahWeb(totalSaranaHari)}</td>
-                    <td class="p-2 border-r border-slate-100 text-right">${formatRupiahWeb(totalPelayananHari)}</td>
-                    <td class="p-2 text-right">${formatRupiahWeb(totalSaranaHari + totalPelayananHari)}</td>
-                `;
+                trSub.innerHTML = `<td colspan="6" class="p-2 border-r border-slate-100 text-center"></td><td class="p-2 border-r border-slate-100 text-right">${formatRupiahWeb(totalSaranaHari)}</td><td class="p-2 border-r border-slate-100 text-right">${formatRupiahWeb(totalPelayananHari)}</td><td class="p-2 text-right">${formatRupiahWeb(totalSaranaHari + totalPelayananHari)}</td>`;
                 tbody.appendChild(trSub);
-
-                grandSarana    += totalSaranaHari;
-                grandPelayanan += totalPelayananHari;
+                grandSarana += totalSaranaHari; grandPelayanan += totalPelayananHari;
             });
-
             const trGrand = document.createElement('tr');
             trGrand.className = 'bg-teal-50 font-bold text-teal-900';
-            trGrand.innerHTML = `
-                <td colspan="6" class="p-3 text-center">JUMLAH KESELURUHAN</td>
-                <td class="p-3 text-right">${formatRupiahWeb(grandSarana)}</td>
-                <td class="p-3 text-right">${formatRupiahWeb(grandPelayanan)}</td>
-                <td class="p-3 text-right">${formatRupiahWeb(grandSarana + grandPelayanan)}</td>
-            `;
+            trGrand.innerHTML = `<td colspan="6" class="p-3 text-center">JUMLAH KESELURUHAN</td><td class="p-3 text-right">${formatRupiahWeb(grandSarana)}</td><td class="p-3 text-right">${formatRupiahWeb(grandPelayanan)}</td><td class="p-3 text-right">${formatRupiahWeb(grandSarana + grandPelayanan)}</td>`;
             tbody.appendChild(trGrand);
         }
 
@@ -708,14 +671,9 @@
             const file = event.target.files[0];
             if (!file) return;
             const ext = file.name.split('.').pop().toLowerCase();
-
-            if (ext === 'xlsx' || ext === 'xls') {
-                importExcelXLSX(event);
-            } else if (ext === 'csv' || ext === 'txt') {
-                importTextFile(event);
-            } else {
-                Swal.fire('Error', 'Format file tidak didukung. Gunakan .xlsx, .xls, .csv, atau .txt', 'error');
-            }
+            if (ext === 'xlsx' || ext === 'xls') importExcelXLSX(event);
+            else if (ext === 'csv' || ext === 'txt') importTextFile(event);
+            else Swal.fire('Error', 'Format file tidak didukung.', 'error');
             event.target.value = '';
         }
 
@@ -726,28 +684,15 @@
             reader.onload = function (e) {
                 let text = e.target.result;
                 if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-                
                 const lines = text.split(/\r?\n/);
                 let isTSV = false;
                 if (lines.length > 0 && lines[0].includes('\t')) isTSV = true;
-                
-                let workbook;
-                if (isTSV) {
-                    workbook = XLSX.read(text, { type: 'string', FS: '\t' });
-                } else {
-                    workbook = XLSX.read(text, { type: 'string' });
-                }
-                
+                let workbook = isTSV ? XLSX.read(text, { type: 'string', FS: '\t' }) : XLSX.read(text, { type: 'string' });
                 const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: '' });
                 const allText = text.toUpperCase();
-
-                if (allText.includes('SURAT TANDA SETOR') || allText.includes('NOMOR STS') || allText.includes('NILAI STS')) {
-                    importSTS(rows);
-                } else if (allText.includes('NAMA PASIEN')) {
-                    importUraianHarian(rows);
-                } else {
-                    Swal.fire('Gagal', 'Format file txt/csv tidak dikenali.', 'error');
-                }
+                if (allText.includes('SURAT TANDA SETOR') || allText.includes('NOMOR STS') || allText.includes('NILAI STS')) importSTS(rows);
+                else if (allText.includes('NAMA PASIEN')) importUraianHarian(rows);
+                else Swal.fire('Gagal', 'Format file txt/csv tidak dikenali.', 'error');
             };
             reader.readAsText(file);
         }
@@ -759,7 +704,6 @@
             reader.onload = function (e) {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-
                 let allText = '';
                 workbook.SheetNames.forEach(sn => {
                     const ws = workbook.Sheets[sn];
@@ -767,7 +711,6 @@
                     allText += ' ' + rows.flat().join(' ');
                 });
                 allText = allText.toUpperCase();
-
                 if (allText.includes('RETRIBUSI JASA PELAYANAN KESEHATAN') && allText.includes('THERAPY')) {
                     let totalImported = 0;
                     workbook.SheetNames.forEach(sn => {
@@ -775,211 +718,106 @@
                         totalImported += importUraianHarian(rows);
                     });
                     Swal.fire('Sukses!', `${totalImported} data pasien berhasil diimport.`, 'success');
-                    renderTabelHarian();
-                    return;
+                    renderTabelHarian(); return;
                 }
-
                 if (allText.includes('REKAPAN SETORAN RETRIBUSI') || allText.includes('RINCIAN PEMBAGIAN')) {
                     const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: '' });
-                    importRekapanBulanan(rows);
-                    return;
+                    importRekapanBulanan(rows); return;
                 }
-
                 if (allText.includes('SURAT TANDA SETOR') || allText.includes('NOMOR STS') || allText.includes('NILAI STS')) {
                     const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: '' });
-                    importSTS(rows);
-                    return;
+                    importSTS(rows); return;
                 }
-
                 Swal.fire('Gagal', 'Format Excel tidak dikenali.', 'error');
             };
             reader.readAsArrayBuffer(file);
         }
 
         function importUraianHarian(rows) {
-            let importedData = [];
-            let currentPatient = null;
-            let isHeaderFound = false;
-
+            let importedData = []; let currentPatient = null; let isHeaderFound = false;
             for (let i = 0; i < rows.length; i++) {
                 const row = rows[i].map(c => String(c).toUpperCase());
-
-                if (row.some(c => c.includes('NAMA PASIEN')) && row.some(c => c.includes('THERAPY'))) {
-                    isHeaderFound = true;
-                    continue;
-                }
+                if (row.some(c => c.includes('NAMA PASIEN')) && row.some(c => c.includes('THERAPY'))) { isHeaderFound = true; continue; }
                 if (!isHeaderFound) continue;
                 if (row[0] && row[0].includes('JUMLAH')) break;
-
-                const tanggalRaw  = rows[i][0];
-                const namaRaw     = rows[i][2];
-                const alamatRaw   = rows[i][3];
-                const jenisRaw    = rows[i][4];
-                const therapyRaw  = rows[i][5];
-                const saranaRaw   = rows[i][7];
-                const pelayananRaw = rows[i][8];
-
+                const tanggalRaw = rows[i][0]; const namaRaw = rows[i][2]; const alamatRaw = rows[i][3];
+                const jenisRaw = rows[i][4]; const therapyRaw = rows[i][5]; const saranaRaw = rows[i][7]; const pelayananRaw = rows[i][8];
                 if (tanggalRaw && String(tanggalRaw).trim() !== '') {
                     let tglString;
-                    if (tanggalRaw instanceof Date) {
-                        tglString = tanggalRaw.toISOString().split('T')[0];
-                    } else if (typeof tanggalRaw === 'number') {
+                    if (tanggalRaw instanceof Date) tglString = tanggalRaw.toISOString().split('T')[0];
+                    else if (typeof tanggalRaw === 'number') {
                         const excelDate = XLSX.SSF.parse_date_code(tanggalRaw);
                         tglString = `${excelDate.y}-${String(excelDate.m).padStart(2, '0')}-${String(excelDate.d).padStart(2, '0')}`;
-                    } else {
-                        tglString = parseTanggalString(String(tanggalRaw));
-                    }
-                    currentPatient = {
-                        id: Date.now() + Math.random(),
-                        tanggal: tglString,
-                        nama: String(namaRaw || '').trim(),
-                        alamat: String(alamatRaw || '').trim(),
-                        jenis: String(jenisRaw || 'RJ').trim(),
-                        therapies: []
-                    };
+                    } else tglString = parseTanggalString(String(tanggalRaw));
+                    currentPatient = { id: Date.now() + Math.random(), tanggal: tglString, nama: String(namaRaw || '').trim(), alamat: String(alamatRaw || '').trim(), jenis: String(jenisRaw || 'RJ').trim(), therapies: [] };
                     importedData.push(currentPatient);
                 }
-
                 const therapyNama = String(therapyRaw || '').trim();
                 if (currentPatient && therapyNama && !therapyNama.toUpperCase().includes('NAMA OBAT')) {
-                    const sarana   = cleanCurrency(saranaRaw);
-                    const pelayanan = cleanCurrency(pelayananRaw);
-                    currentPatient.therapies.push({
-                        nama: therapyNama,
-                        sarana, pelayanan,
-                        total: sarana + pelayanan
-                    });
+                    const sarana = cleanCurrency(saranaRaw); const pelayanan = cleanCurrency(pelayananRaw);
+                    currentPatient.therapies.push({ nama: therapyNama, sarana, pelayanan, total: sarana + pelayanan });
                 }
             }
-
-            if (importedData.length > 0) {
-                dataPasien = dataPasien.concat(importedData);
-                localStorage.setItem('dataUraianHarian', JSON.stringify(dataPasien));
-            }
+            if (importedData.length > 0) { dataPasien = dataPasien.concat(importedData); localStorage.setItem('dataUraianHarian', JSON.stringify(dataPasien)); }
             return importedData.length;
         }
 
         function importRekapanBulanan(rows) {
-            let imported = [];
-            let isData = false;
+            let imported = []; let isData = false;
             for (let i = 0; i < rows.length; i++) {
-                const row = rows[i];
-                const rowStr = row.join(' ').toUpperCase();
-
+                const row = rows[i]; const rowStr = row.join(' ').toUpperCase();
                 if (/^\d+(\.0)?$/.test(String(row[0]).trim()) && rowStr.includes('RP')) {
                     isData = true;
-                    const bulanRaw = String(row[1] || '').trim();
-                    const bulan = bulanRaw.charAt(0).toUpperCase() + bulanRaw.slice(1).toLowerCase();
-                    const pasien = parseInt(row[2]) || 0;
-                    const sarana = cleanCurrency(row[3]);
-                    const pelayanan = cleanCurrency(row[4]);
-                    const total = cleanCurrency(row[5]);
-                    if (bulan && bulan !== 'Bulan') {
-                        imported.push({ bulan, pasien, sarana, pelayanan, total });
-                    }
+                    const bulanRaw = String(row[1] || '').trim(); const bulan = bulanRaw.charAt(0).toUpperCase() + bulanRaw.slice(1).toLowerCase();
+                    const pasien = parseInt(row[2]) || 0; const sarana = cleanCurrency(row[3]); const pelayanan = cleanCurrency(row[4]); const total = cleanCurrency(row[5]);
+                    if (bulan && bulan !== 'Bulan') imported.push({ bulan, pasien, sarana, pelayanan, total });
                 }
                 if (isData && rowStr.includes('TOTAL')) break;
             }
-
             if (imported.length > 0) {
                 imported.forEach(newData => {
                     const idx = dataBulanan.findIndex(d => d.bulan.toLowerCase() === newData.bulan.toLowerCase());
-                    if (idx !== -1) dataBulanan[idx] = newData;
-                    else dataBulanan.push(newData);
+                    if (idx !== -1) dataBulanan[idx] = newData; else dataBulanan.push(newData);
                 });
                 const urutanBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
                 dataBulanan.sort((a, b) => urutanBulan.indexOf(a.bulan) - urutanBulan.indexOf(b.bulan));
-                localStorage.setItem('dataBulananPKM', JSON.stringify(dataBulanan));
-                renderBulananUI();
+                localStorage.setItem('dataBulananPKM', JSON.stringify(dataBulanan)); renderBulananUI();
                 Swal.fire('Sukses!', `${imported.length} data bulanan berhasil diimport.`, 'success');
-            } else {
-                Swal.fire('Gagal', 'Tidak ada data rekap bulanan yang terdeteksi.', 'error');
-            }
+            } else Swal.fire('Gagal', 'Tidak ada data rekap bulanan yang terdeteksi.', 'error');
         }
 
         function importSTS(rows) {
-            let imported = [];
-            let isHeaderFound = false;
-            let counter = 1;
-            let mode = 'DAFTAR';
-
+            let imported = []; let isHeaderFound = false; let counter = 1; let mode = 'DAFTAR';
             for (let i = 0; i < rows.length; i++) {
-                const row = rows[i].map(c => String(c || '').toUpperCase().trim());
-                const rowStr = row.join(' ');
-
-                if (rowStr.includes('NOMOR STS') && rowStr.includes('URAIAN')) {
-                    isHeaderFound = true;
-                    mode = 'DAFTAR';
-                    continue;
-                }
-                if (rowStr.includes('NILAI STS') && rowStr.includes('TANGGAL STS')) {
-                    isHeaderFound = true;
-                    mode = 'BPK';
-                    continue;
-                }
-                if (rowStr.includes('NOMOR STS') && rowStr.includes('SIPD') && !row.some(c => c.includes('URAIAN'))) {
-                     isHeaderFound = true;
-                     mode = 'BPK';
-                     continue;
-                }
-
+                const row = rows[i].map(c => String(c || '').toUpperCase().trim()); const rowStr = row.join(' ');
+                if (rowStr.includes('NOMOR STS') && rowStr.includes('URAIAN')) { isHeaderFound = true; mode = 'DAFTAR'; continue; }
+                if (rowStr.includes('NILAI STS') && rowStr.includes('TANGGAL STS')) { isHeaderFound = true; mode = 'BPK'; continue; }
+                if (rowStr.includes('NOMOR STS') && rowStr.includes('SIPD') && !row.some(c => c.includes('URAIAN'))) { isHeaderFound = true; mode = 'BPK'; continue; }
                 if (!isHeaderFound) continue;
                 if (rowStr.includes('TOTAL') || rowStr.includes('JUMLAH')) break;
-
                 let nomorSTS = '', nomorSIPD = '', uraian = '', tglStr = '', tglSetorStr = '', jumlah = 0;
-
-                if (mode === 'DAFTAR') {
-                    nomorSTS = rows[i][1];
-                    nomorSIPD = rows[i][2];
-                    uraian = rows[i][3];
-                    tglStr = rows[i][4];
-                    tglSetorStr = rows[i][5];
-                    jumlah = rows[i][6];
-                } else if (mode === 'BPK') {
-                    nomorSTS = rows[i][1];
-                    nomorSIPD = rows[i][2];
-                    jumlah = rows[i][3];
-                    tglStr = rows[i][4];
-                    tglSetorStr = rows[i][6];
-                    uraian = 'Setoran Retribusi Pelayanan Kesehatan';
-                }
-
+                if (mode === 'DAFTAR') { nomorSTS = rows[i][1]; nomorSIPD = rows[i][2]; uraian = rows[i][3]; tglStr = rows[i][4]; tglSetorStr = rows[i][5]; jumlah = rows[i][6]; }
+                else if (mode === 'BPK') { nomorSTS = rows[i][1]; nomorSIPD = rows[i][2]; jumlah = rows[i][3]; tglStr = rows[i][4]; tglSetorStr = rows[i][6]; uraian = 'Setoran Retribusi Pelayanan Kesehatan'; }
                 if (!nomorSTS || String(nomorSTS).includes('#REF!') || String(nomorSTS).trim() === '') continue;
                 if (String(rows[i][0]).includes('#REF!')) continue;
-
-                let tglParsed = parseTanggalString(String(tglStr));
-                let tglSetorParsed = parseTanggalString(String(tglSetorStr));
-
-                imported.push({
-                    no: counter++,
-                    nomorSTS: String(nomorSTS).trim(),
-                    nomorSIPD: String(nomorSIPD || '').replace('#REF!', '').trim(),
-                    uraian: String(uraian || '').replace('#REF!', '').trim(),
-                    tanggal: tglParsed, 
-                    tglSetor: tglSetorParsed,
-                    jumlah: cleanCurrency(jumlah)
-                });
+                let tglParsed = parseTanggalString(String(tglStr)); let tglSetorParsed = parseTanggalString(String(tglSetorStr));
+                imported.push({ no: counter++, nomorSTS: String(nomorSTS).trim(), nomorSIPD: String(nomorSIPD || '').replace('#REF!', '').trim(), uraian: String(uraian || '').replace('#REF!', '').trim(), tanggal: tglParsed, tglSetor: tglSetorParsed, jumlah: cleanCurrency(jumlah) });
             }
-
-            if (imported.length > 0) {
-                dataSTS = imported;
-                localStorage.setItem('dataSTS', JSON.stringify(dataSTS));
-                renderTabelSTS();
-                Swal.fire('Sukses!', `${imported.length} data STS berhasil diimport.`, 'success');
-            } else {
-                Swal.fire('Gagal', 'Tidak ada data STS yang terdeteksi.', 'error');
-            }
+            if (imported.length > 0) { dataSTS = imported; localStorage.setItem('dataSTS', JSON.stringify(dataSTS)); renderTabelSTS(); Swal.fire('Sukses!', `${imported.length} data STS berhasil diimport.`, 'success'); }
+            else Swal.fire('Gagal', 'Tidak ada data STS yang terdeteksi.', 'error');
         }
 
         // =====================================================================
-        // 10. RENDER DASHBOARD BULANAN
+        // 10. RENDER DASHBOARD BULANAN (UPGRADED)
         // =====================================================================
         function renderBulananUI() {
             const totalPenerimaan = dataBulanan.reduce((acc, x) => acc + x.total, 0);
             const totalPasien = dataBulanan.reduce((acc, x) => acc + x.pasien, 0);
+            const rataRata = dataBulanan.length > 0 ? totalPenerimaan / dataBulanan.length : 0;
 
             document.getElementById('total-penerimaan').innerText = formatRupiahFull(totalPenerimaan);
             document.getElementById('total-pasien').innerText = totalPasien.toLocaleString('id-ID');
+            document.getElementById('rata-rata-bulan').innerText = formatRupiahFull(rataRata);
 
             const tbody = document.getElementById('tbody-bulanan');
             tbody.innerHTML = '';
@@ -990,40 +828,49 @@
                         <td class="p-3 text-center">${item.pasien}</td>
                         <td class="p-3 text-right">${formatRupiahWeb(item.sarana)}</td>
                         <td class="p-3 text-right">${formatRupiahWeb(item.pelayanan)}</td>
-                        <td class="p-3 text-right font-bold text-emerald-600">${formatRupiahWeb(item.total)}</td>
+                        <td class="p-3 text-right font-bold text-teal-600">${formatRupiahWeb(item.total)}</td>
                     </tr>
                 `;
             });
 
-            const ctx = document.getElementById('chart-penerimaan').getContext('2d');
+            // Chart 1: Line Chart Penerimaan
+            const ctx1 = document.getElementById('chart-penerimaan').getContext('2d');
             if (chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx, {
+            chartInstance = new Chart(ctx1, {
                 type: 'line',
                 data: {
                     labels: dataBulanan.map(x => x.bulan),
                     datasets: [{
                         label: 'Penerimaan (Rp)',
                         data: dataBulanan.map(x => x.total),
-                        backgroundColor: 'rgba(13, 148, 136, 0.15)',
+                        backgroundColor: 'rgba(13, 148, 136, 0.1)',
                         borderColor: '#0D9488',
                         borderWidth: 3,
                         pointBackgroundColor: '#fff',
                         pointBorderColor: '#0D9488',
-                        pointRadius: 5,
-                        tension: 0.35,
+                        pointRadius: 4,
+                        tension: 0.4,
                         fill: true
                     }]
                 },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { callback: v => 'Rp ' + v.toLocaleString('id-ID') }
-                        }
-                    }
-                }
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => 'Rp ' + v.toLocaleString('id-ID') } } } }
+            });
+
+            // Chart 2: Bar Chart Pasien
+            const ctx2 = document.getElementById('chart-pasien').getContext('2d');
+            if (chartPasienInstance) chartPasienInstance.destroy();
+            chartPasienInstance = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: dataBulanan.map(x => x.bulan),
+                    datasets: [{
+                        label: 'Jumlah Pasien',
+                        data: dataBulanan.map(x => x.pasien),
+                        backgroundColor: '#3B82F6',
+                        borderRadius: 4
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
             });
         }
 
@@ -1034,12 +881,7 @@
             const tbody = document.getElementById('tbody-sts');
             if (!tbody) return;
             tbody.innerHTML = '';
-
-            if (dataSTS.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-400">Belum ada data STS. Import file Excel/TXT untuk memulai.</td></tr>';
-                return;
-            }
-
+            if (dataSTS.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-400">Belum ada data STS. Import file Excel/TXT untuk memulai.</td></tr>'; return; }
             let total = 0;
             dataSTS.forEach((sts, idx) => {
                 total += sts.jumlah;
@@ -1054,265 +896,86 @@
                     </tr>
                 `;
             });
-
-            tbody.innerHTML += `
-                <tr class="bg-teal-50 font-bold text-teal-900">
-                    <td colspan="5" class="p-3 text-center">TOTAL</td>
-                    <td class="p-3 text-right">${formatRupiahFull(total)}</td>
-                </tr>
-            `;
+            tbody.innerHTML += `<tr class="bg-teal-50 font-bold text-teal-900"><td colspan="5" class="p-3 text-center">TOTAL</td><td class="p-3 text-right">${formatRupiahFull(total)}</td></tr>`;
         }
 
         // =====================================================================
-        // 12. EXPORT EXCEL: URAIAN HARIAN
+        // 12-15. EXPORT EXCEL FUNCTIONS
         // =====================================================================
         function exportPersisExcel() {
-            if (dataPasien.length === 0) {
-                Swal.fire('Info', 'Belum ada data untuk di-export.', 'info');
-                return;
-            }
-
+            if (dataPasien.length === 0) { Swal.fire('Info', 'Belum ada data untuk di-export.', 'info'); return; }
             const groupedByMonth = {};
-            dataPasien.forEach(p => {
-                const d = new Date(p.tanggal);
-                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                if (!groupedByMonth[key]) groupedByMonth[key] = [];
-                groupedByMonth[key].push(p);
-            });
-
+            dataPasien.forEach(p => { const d = new Date(p.tanggal); const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; if (!groupedByMonth[key]) groupedByMonth[key] = []; groupedByMonth[key].push(p); });
             const wb = XLSX.utils.book_new();
             const namaBulanArr = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
-
             Object.keys(groupedByMonth).sort().forEach(key => {
-                const [tahun, bulanNum] = key.split('-');
-                const namaBulan = namaBulanArr[parseInt(bulanNum) - 1];
-                const pasienBulanIni = groupedByMonth[key].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
-
-                const ws_data = [];
-                ws_data.push([`RETRIBUSI JASA PELAYANAN KESEHATAN PUSKESMAS TERING SEBERANG ${tahun}`]);
-                ws_data.push([]);
-                ws_data.push([]);
-                ws_data.push([`BULAN : ${namaBulan} ${tahun}`]);
-                ws_data.push(['TANGGAL', 'NO', 'NAMA PASIEN', 'ALAMAT', 'JENIS PELAYANAN (RJ/RI)', 'THERAPY', '', 'JASA SARANA', 'JASA PELAYANAN', 'TOTAL', '']);
-                ws_data.push(['', '', '', '', '', 'NAMA OBAT/BHP', '', '', '', '', '']);
-
-                const grupTanggal = {};
-                pasienBulanIni.forEach(p => {
-                    if (!grupTanggal[p.tanggal]) grupTanggal[p.tanggal] = [];
-                    grupTanggal[p.tanggal].push(p);
-                });
-
+                const [tahun, bulanNum] = key.split('-'); const namaBulan = namaBulanArr[parseInt(bulanNum) - 1]; const pasienBulanIni = groupedByMonth[key].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+                const ws_data = []; ws_data.push([`RETRIBUSI JASA PELAYANAN KESEHATAN PUSKESMAS TERING SEBERANG ${tahun}`]); ws_data.push([]); ws_data.push([]); ws_data.push([`BULAN : ${namaBulan} ${tahun}`]); ws_data.push(['TANGGAL', 'NO', 'NAMA PASIEN', 'ALAMAT', 'JENIS PELAYANAN (RJ/RI)', 'THERAPY', '', 'JASA SARANA', 'JASA PELAYANAN', 'TOTAL', '']); ws_data.push(['', '', '', '', '', 'NAMA OBAT/BHP', '', '', '', '', '']);
+                const grupTanggal = {}; pasienBulanIni.forEach(p => { if (!grupTanggal[p.tanggal]) grupTanggal[p.tanggal] = []; grupTanggal[p.tanggal].push(p); });
                 let nomorUrut = 1, grandSarana = 0, grandPelayanan = 0;
                 Object.keys(grupTanggal).sort().forEach(tgl => {
-                    const pasienHariIni = grupTanggal[tgl];
-                    let totalSaranaHari = 0, totalPelayananHari = 0;
-
+                    const pasienHariIni = grupTanggal[tgl]; let totalSaranaHari = 0, totalPelayananHari = 0;
                     pasienHariIni.forEach(pasien => {
                         pasien.therapies.forEach((th, tIdx) => {
-                            const row = [];
-                            if (tIdx === 0) row.push(formatTanggalExcel(pasien.tanggal), nomorUrut, pasien.nama, pasien.alamat, pasien.jenis);
-                            else row.push('', '', '', '', '');
-                            row.push(th.nama, '', th.sarana, th.pelayanan, th.total, '');
-                            ws_data.push(row);
-                            totalSaranaHari += th.sarana;
-                            totalPelayananHari += th.pelayanan;
+                            const row = []; if (tIdx === 0) row.push(formatTanggalExcel(pasien.tanggal), nomorUrut, pasien.nama, pasien.alamat, pasien.jenis); else row.push('', '', '', '', '');
+                            row.push(th.nama, '', th.sarana, th.pelayanan, th.total, ''); ws_data.push(row); totalSaranaHari += th.sarana; totalPelayananHari += th.pelayanan;
                         });
                         nomorUrut++;
                     });
-
-                    ws_data.push(['', '', '', '', '', '', '', '', '', totalSaranaHari, totalPelayananHari]);
-                    grandSarana += totalSaranaHari;
-                    grandPelayanan += totalPelayananHari;
+                    ws_data.push(['', '', '', '', '', '', '', '', '', totalSaranaHari, totalPelayananHari]); grandSarana += totalSaranaHari; grandPelayanan += totalPelayananHari;
                 });
-
                 const grandTotal = grandSarana + grandPelayanan;
-                ws_data.push(['JUMLAH', '', '', '', '', '', '', grandSarana, grandPelayanan, grandTotal, '']);
-                ws_data.push([]);
-                ws_data.push(['JUMLAH KESELURUHAN', '', '', grandTotal, '', '', '', '', '', '', '']);
-                ws_data.push(['JUMLAH KUNJUNGAN', '', '', nomorUrut - 1, '', '', '', '', '', '', '']);
-                ws_data.push(['SARANA', '', '', grandSarana, '', '', '', '', '', '', '']);
-                ws_data.push(['JASA PELAYANAN', '', '', grandPelayanan, '', '', '', '', '', '', '']);
-
-                const ws = XLSX.utils.aoa_to_sheet(ws_data);
-                XLSX.utils.book_append_sheet(wb, ws, namaBulan);
+                ws_data.push(['JUMLAH', '', '', '', '', '', '', grandSarana, grandPelayanan, grandTotal, '']); ws_data.push([]); ws_data.push(['JUMLAH KESELURUHAN', '', '', grandTotal, '', '', '', '', '', '', '']); ws_data.push(['JUMLAH KUNJUNGAN', '', '', nomorUrut - 1, '', '', '', '', '', '', '']); ws_data.push(['SARANA', '', '', grandSarana, '', '', '', '', '', '', '']); ws_data.push(['JASA PELAYANAN', '', '', grandPelayanan, '', '', '', '', '', '', '']);
+                const ws = XLSX.utils.aoa_to_sheet(ws_data); XLSX.utils.book_append_sheet(wb, ws, namaBulan);
             });
-
-            XLSX.writeFile(wb, `URAIAN HARIAN RETRIBUSI INDUK PKM TERING SEBERANG 2026.xlsx`);
-            Swal.fire('Sukses!', 'File Excel berhasil di-export.', 'success');
+            XLSX.writeFile(wb, `URAIAN HARIAN RETRIBUSI INDUK PKM TERING SEBERANG 2026.xlsx`); Swal.fire('Sukses!', 'File Excel berhasil di-export.', 'success');
         }
 
-        // =====================================================================
-        // 13. EXPORT EXCEL: REKAPAN BULANAN
-        // =====================================================================
         function exportExcelBulanan() {
-            if (dataBulanan.length === 0) {
-                Swal.fire('Info', 'Belum ada data bulanan.', 'info');
-                return;
-            }
-
-            const ws_data = [];
-            ws_data.push(['PEMERINTAH KABUPATEN KUTAI BARAT']);
-            ws_data.push(['DINAS KESEHATAN']);
-            ws_data.push(['UPTD PUSKESMAS TERING SEBERANG']);
-            ws_data.push(['JL.Kapten Tausin RT.I Tering Seberang Kec.Tering Kode Pos 75566']);
-            ws_data.push([]);
-            ws_data.push(['REKAPAN SETORAN RETRIBUSI']);
-            ws_data.push(['UPTD. PUSKESMAS TERING SEBERANG']);
-            ws_data.push(['TAHUN 2026']);
-            ws_data.push([]);
-            ws_data.push(['NO', 'BULAN', 'JUMLAH PASIEN', 'JASA SARANA', 'JASA PELAYANAN', 'TOTAL']);
-
+            if (dataBulanan.length === 0) { Swal.fire('Info', 'Belum ada data bulanan.', 'info'); return; }
+            const ws_data = [['PEMERINTAH KABUPATEN KUTAI BARAT'], ['DINAS KESEHATAN'], ['UPTD PUSKESMAS TERING SEBERANG'], ['JL.Kapten Tausin RT.I Tering Seberang Kec.Tering Kode Pos 75566'], [], ['REKAPAN SETORAN RETRIBUSI'], ['UPTD. PUSKESMAS TERING SEBERANG'], ['TAHUN 2026'], [], ['NO', 'BULAN', 'JUMLAH PASIEN', 'JASA SARANA', 'JASA PELAYANAN', 'TOTAL']];
             let no = 1, totalPasien = 0, grandSarana = 0, grandPelayanan = 0, grandTotal = 0;
-            dataBulanan.forEach(r => {
-                ws_data.push([no++, r.bulan.toUpperCase(), r.pasien, r.sarana, r.pelayanan, r.total]);
-                totalPasien += r.pasien;
-                grandSarana += r.sarana;
-                grandPelayanan += r.pelayanan;
-                grandTotal += r.total;
-            });
+            dataBulanan.forEach(r => { ws_data.push([no++, r.bulan.toUpperCase(), r.pasien, r.sarana, r.pelayanan, r.total]); totalPasien += r.pasien; grandSarana += r.sarana; grandPelayanan += r.pelayanan; grandTotal += r.total; });
             ws_data.push(['', 'TOTAL', totalPasien, grandSarana, grandPelayanan, grandTotal]);
-
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet(ws_data);
-            XLSX.utils.book_append_sheet(wb, ws, 'Rekapan Bulanan');
-            XLSX.writeFile(wb, `REKAPAN RETRIBUSI PKM TERING 2026.xlsx`);
-            Swal.fire('Sukses!', 'File rekap bulanan berhasil di-export.', 'success');
+            const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(ws_data); XLSX.utils.book_append_sheet(wb, ws, 'Rekapan Bulanan'); XLSX.writeFile(wb, `REKAPAN RETRIBUSI PKM TERING 2026.xlsx`); Swal.fire('Sukses!', 'File rekap bulanan berhasil di-export.', 'success');
         }
 
-        // =====================================================================
-        // 14. EXPORT EXCEL: STS
-        // =====================================================================
         function exportSTS() {
-            if (dataSTS.length === 0) {
-                Swal.fire('Info', 'Belum ada data STS.', 'info');
-                return;
-            }
-            const ws_data = [];
-            ws_data.push(['DAFTAR PENDAPATAN']);
-            ws_data.push(['SURAT TANDA SETOR ( STS )']);
-            ws_data.push(['PERIODE JANUARI S/D DESEMBER 2026']);
-            ws_data.push([]);
-            ws_data.push(['NO', 'NOMOR STS', 'NOMOR STS SIPD', 'URAIAN', 'TGL TERIMA', 'TGL SETOR', 'JUMLAH']);
-
+            if (dataSTS.length === 0) { Swal.fire('Info', 'Belum ada data STS.', 'info'); return; }
+            const ws_data = [['DAFTAR PENDAPATAN'], ['SURAT TANDA SETOR ( STS )'], ['PERIODE JANUARI S/D DESEMBER 2026'], [], ['NO', 'NOMOR STS', 'NOMOR STS SIPD', 'URAIAN', 'TGL TERIMA', 'TGL SETOR', 'JUMLAH']];
             let total = 0;
-            dataSTS.forEach((sts, idx) => {
-                ws_data.push([
-                    idx + 1, sts.nomorSTS, sts.nomorSIPD, sts.uraian,
-                    formatTanggalExcel(sts.tanggal), formatTanggalExcel(sts.tglSetor || sts.tanggal), sts.jumlah
-                ]);
-                total += sts.jumlah;
-            });
-            ws_data.push([]);
-            ws_data.push(['TOTAL', '', '', '', '', '', total]);
-
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet(ws_data);
-            XLSX.utils.book_append_sheet(wb, ws, 'STS');
-            XLSX.writeFile(wb, `REKAPAN STS PKM TERING 2026.xlsx`);
-            Swal.fire('Sukses!', 'File STS berhasil di-export.', 'success');
+            dataSTS.forEach((sts, idx) => { ws_data.push([idx + 1, sts.nomorSTS, sts.nomorSIPD, sts.uraian, formatTanggalExcel(sts.tanggal), formatTanggalExcel(sts.tglSetor || sts.tanggal), sts.jumlah]); total += sts.jumlah; });
+            ws_data.push([]); ws_data.push(['TOTAL', '', '', '', '', '', total]);
+            const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(ws_data); XLSX.utils.book_append_sheet(wb, ws, 'STS'); XLSX.writeFile(wb, `REKAPAN STS PKM TERING 2026.xlsx`); Swal.fire('Sukses!', 'File STS berhasil di-export.', 'success');
         }
 
-        // =====================================================================
-        // 15. EXPORT: FORM KONFIRMASI BPK
-        // =====================================================================
         function exportTemplateKonfirmasiBPK() {
-            if (dataSTS.length === 0) {
-                Swal.fire('Info', 'Belum ada data STS. Silakan import file terlebih dahulu.', 'info');
-                return;
-            }
-            const ws_data = [];
-            ws_data.push(['BADAN PEMERIKSA KEUANGAN']);
-            ws_data.push(['FORM PENGISIAN KONFIRMASI PENYETORAN PENDAPATAN']);
-            ws_data.push(['TAHUN ANGGARAN 2026']);
-            ws_data.push([]);
-            ws_data.push(['Petunjuk Pengisian:']);
-            ws_data.push(['1. Mohon untuk tidak merubah format excel penulisan pada form ini (tulis tanggal sesuai dengan format excel yg ada) dan tidak menambahkan kolom kenan dan/atau kiri.']);
-            ws_data.push(['2. Mohon isikan kolom "No. STS" sesuai dengan nomor seluruh STS selama TA 2026.']);
-            ws_data.push(['3. Mohon isikan kolom "Nilai STS" sesuai dengan nilai setoran masing-masing STS selama TA 2026.']);
-            ws_data.push(['4. Mohon isikan kolom "Tanggal STS" sesuai dengan tanggal masing-masing STS selama TA 2026.']);
-            ws_data.push(['5. Mohon isikan kolom "Penyetoran Pendapatan yang Diterima dari Tanggal" sesuai dengan tanggal awal penerimaan Pendapatan atas STS terkait berdasarkan kondisi sesungguhnya dan/atau catatan penerimaan PKM.']);
-            ws_data.push(['6. Mohon isikan kolom "Penyetoran Pendapatan yang Diterima Hingga Tanggal" sesuai dengan tanggal terakhir penerimaan Pendapatan atas STS terkait berdasarkan kondisi sesungguhnya dan/atau catatan penerimaan PKM.']);
-            ws_data.push(['7. Mohon pastikan jika seluruh STS telah terisi pada Form Pengisian Konfirmasi Penyetoran Pendapatan dengan membandingkan antara nilai total pada tabel dengan nilai realisasi pendapatan PKM selama TA 2026.']);
-            ws_data.push([]);
-            ws_data.push(['Daftar Jangka Waktu Penyetoran Pendapatan UPT PKM TERING SEBERANG TAHUN 2026']);
-            ws_data.push(['No', 'No. STS', '', 'Nilai STS', 'Tanggal STS', 'Penyetoran Pendapatan yang Diterima', '']);
-            ws_data.push(['', '', '', '', '', 'Dari Tanggal', 'Hingga Tanggal']);
-
+            if (dataSTS.length === 0) { Swal.fire('Info', 'Belum ada data STS. Silakan import file terlebih dahulu.', 'info'); return; }
+            const ws_data = [['BADAN PEMERIKSA KEUANGAN'], ['FORM PENGISIAN KONFIRMASI PENYETORAN PENDAPATAN'], ['TAHUN ANGGARAN 2026'], [], ['Petunjuk Pengisian:'], ['1. Mohon untuk tidak merubah format excel penulisan pada form ini (tulis tanggal sesuai dengan format excel yg ada) dan tidak menambahkan kolom kenan dan/atau kiri.'], ['2. Mohon isikan kolom "No. STS" sesuai dengan nomor seluruh STS selama TA 2026.'], ['3. Mohon isikan kolom "Nilai STS" sesuai dengan nilai setoran masing-masing STS selama TA 2026.'], ['4. Mohon isikan kolom "Tanggal STS" sesuai dengan tanggal masing-masing STS selama TA 2026.'], ['5. Mohon isikan kolom "Penyetoran Pendapatan yang Diterima dari Tanggal" sesuai dengan tanggal awal penerimaan Pendapatan atas STS terkait berdasarkan kondisi sesungguhnya dan/atau catatan penerimaan PKM.'], ['6. Mohon isikan kolom "Penyetoran Pendapatan yang Diterima Hingga Tanggal" sesuai dengan tanggal terakhir penerimaan Pendapatan atas STS terkait berdasarkan kondisi sesungguhnya dan/atau catatan penerimaan PKM.'], ['7. Mohon pastikan jika seluruh STS telah terisi pada Form Pengisian Konfirmasi Penyetoran Pendapatan dengan membandingkan antara nilai total pada tabel dengan nilai realisasi pendapatan PKM selama TA 2026.'], [], ['Daftar Jangka Waktu Penyetoran Pendapatan UPT PKM TERING SEBERANG TAHUN 2026'], ['No', 'No. STS', '', 'Nilai STS', 'Tanggal STS', 'Penyetoran Pendapatan yang Diterima', ''], ['', '', '', '', '', 'Dari Tanggal', 'Hingga Tanggal']];
             let total = 0;
             dataSTS.forEach((sts, idx) => {
-                let dSTS = new Date(sts.tanggal);
-                let dDari = new Date(sts.tanggal);
-                let dHingga = new Date(sts.tglSetor || sts.tanggal);
-                
-                if (isNaN(dSTS.getTime())) dSTS = sts.tanggal;
-                if (isNaN(dDari.getTime())) dDari = sts.tanggal;
-                if (isNaN(dHingga.getTime())) dHingga = sts.tglSetor || sts.tanggal;
-
-                ws_data.push([
-                    idx + 1, 
-                    sts.nomorSTS, 
-                    sts.nomorSIPD, 
-                    sts.jumlah,
-                    dSTS,
-                    dDari,
-                    dHingga
-                ]);
-                total += sts.jumlah;
+                let dSTS = new Date(sts.tanggal); let dDari = new Date(sts.tanggal); let dHingga = new Date(sts.tglSetor || sts.tanggal);
+                if (isNaN(dSTS.getTime())) dSTS = sts.tanggal; if (isNaN(dDari.getTime())) dDari = sts.tanggal; if (isNaN(dHingga.getTime())) dHingga = sts.tglSetor || sts.tanggal;
+                ws_data.push([idx + 1, sts.nomorSTS, sts.nomorSIPD, sts.jumlah, dSTS, dDari, dHingga]); total += sts.jumlah;
             });
-            
-            ws_data.push(['', '', '', total, '', '', '']);
-            ws_data.push([]);
-            ws_data.push([]);
-            ws_data.push(['', '', '', '', 'Tering Seberang, 31 Desember 2026']);
-            ws_data.push(['', '', '', '', 'Kepala UPTD PKM Tering Seberang']);
-            ws_data.push([]);
-            ws_data.push([]);
-            ws_data.push([]);
-            ws_data.push([]);
-            ws_data.push(['', '', '', '', 'Ns.Anti,S.Kep.']);
-            ws_data.push(['', '', '', '', 'NIP : 19770727 200701 1 021']);
-
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet(ws_data);
-
-            ws['!cols'] = [
-                { wch: 5 },  { wch: 35 }, { wch: 50 }, { wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 15 }
-            ];
-
+            ws_data.push(['', '', '', total, '', '', '']); ws_data.push([]); ws_data.push([]); ws_data.push(['', '', '', '', 'Tering Seberang, 31 Desember 2026']); ws_data.push(['', '', '', '', 'Kepala UPTD PKM Tering Seberang']); ws_data.push([]); ws_data.push([]); ws_data.push([]); ws_data.push([]); ws_data.push(['', '', '', '', 'Ns.Anti,S.Kep.']); ws_data.push(['', '', '', '', 'NIP : 19770727 200701 1 021']);
+            const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            ws['!cols'] = [{ wch: 5 }, { wch: 35 }, { wch: 50 }, { wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 15 }];
             const range = XLSX.utils.decode_range(ws['!ref']);
             for (let R = 16; R <= range.e.r; ++R) {
-                const cellE = ws['E' + (R + 1)];
-                if (cellE && cellE.t === 'n') cellE.z = 'dd mmmm yyyy'; 
-                const cellF = ws['F' + (R + 1)];
-                if (cellF && cellF.t === 'n') cellF.z = 'm/d/yyyy'; 
-                const cellG = ws['G' + (R + 1)];
-                if (cellG && cellG.t === 'n') cellG.z = 'm/d/yyyy'; 
+                const cellE = ws['E' + (R + 1)]; if (cellE && cellE.t === 'n') cellE.z = 'dd mmmm yyyy';
+                const cellF = ws['F' + (R + 1)]; if (cellF && cellF.t === 'n') cellF.z = 'm/d/yyyy';
+                const cellG = ws['G' + (R + 1)]; if (cellG && cellG.t === 'n') cellG.z = 'm/d/yyyy';
             }
-
-            XLSX.utils.book_append_sheet(wb, ws, 'Konfirmasi BPK');
-            XLSX.writeFile(wb, `FORM KONFIRMASI BPK PKM TERING 2026.xlsx`);
-            Swal.fire('Sukses!', 'File Konfirmasi BPK berhasil di-export.', 'success');
+            XLSX.utils.book_append_sheet(wb, ws, 'Konfirmasi BPK'); XLSX.writeFile(wb, `FORM KONFIRMASI BPK PKM TERING 2026.xlsx`); Swal.fire('Sukses!', 'File Konfirmasi BPK berhasil di-export.', 'success');
         }
 
         // =====================================================================
         // 16. RESET DATA HARIAN
         // =====================================================================
         function resetDataHarian() {
-            Swal.fire({
-                title: 'Hapus Semua Data Harian?',
-                text: 'Data uraian harian akan hilang permanen!',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#EF4444',
-                confirmButtonText: 'Ya, Hapus',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    localStorage.removeItem('dataUraianHarian');
-                    dataPasien = [];
-                    renderTabelHarian();
-                    Swal.fire('Terhapus!', 'Data Harian berhasil dihapus.', 'success');
-                }
+            Swal.fire({ title: 'Hapus Semua Data Harian?', text: 'Data uraian harian akan hilang permanen!', icon: 'warning', showCancelButton: true, confirmButtonColor: '#EF4444', confirmButtonText: 'Ya, Hapus', cancelButtonText: 'Batal' }).then((result) => {
+                if (result.isConfirmed) { localStorage.removeItem('dataUraianHarian'); dataPasien = []; renderTabelHarian(); Swal.fire('Terhapus!', 'Data Harian berhasil dihapus.', 'success'); }
             });
         }
 
@@ -1320,15 +983,10 @@
         // 17. INITIALIZATION
         // =====================================================================
         document.addEventListener('DOMContentLoaded', function () {
-            // Cek Login Terlebih Dahulu
             cekStatusLogin();
-
-            // Setup Tanggal
             const today = new Date().toISOString().split('T')[0];
             const inputTgl = document.getElementById('form-tanggal');
             if (inputTgl) inputTgl.value = today;
-
-            // Inisialisasi Form & Data
             tambahBarisTherapy();
             renderTabelHarian();
             renderBulananUI();
