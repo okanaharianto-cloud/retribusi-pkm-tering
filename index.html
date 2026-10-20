@@ -735,3 +735,342 @@
     </script>
 </body>
 </html>
+<script src="https://jsdelivr.net"></script>
+Berikut adalah script JavaScript penuh untuk sistem SI-RETRIBUSI PKM Tering Seberang. Script ini sudah menyatukan Master Data Therapy, fungsi pengisian otomatis (Auto-Price), manajemen data pasien menggunakan localStorage, serta modul untuk Import & Export Excel langsung (.xlsx) menggunakan pustaka SheetJS (XLSX).
+
+Cara Pemasangan:
+
+1. Pastikan Anda sudah memuat pustaka SheetJS di dalam file HTML Anda sebelum memanggil script ini. Tambahkan baris ini di dalam elemen <head> atau sebelum tag </body>:html
+<script src="https://jsdelivr.net"></script>
+Gunakan kode dengan hati-hati.
+2. Letakkan seluruh kode di bawah ini di dalam tag <script> aplikasi Anda.
+javascript
+// =========================================================================
+// 1. MASTER DATA THERAPY (Sesuai Tarif Perda / Excel PKM Tering Seberang)
+// =========================================================================
+const MASTER_THERAPY = [
+    { nama: 'PENGOBATAN UMUM', sarana: 8100, pelayanan: 5400 },
+    { nama: 'KONSULTASI DOKTER UMUM/DOKTER GIGI', sarana: 13500, pelayanan: 9000 },
+    { nama: 'KIR DOKTER', sarana: 15600, pelayanan: 10400 },
+    { nama: 'OBAT NON RACIKAN', sarana: 4500, pelayanan: 3000 },
+    { nama: 'PELAYANAN INFORMASI OBAT', sarana: 7200, pelayanan: 4800 },
+    { nama: 'RACIKAN', sarana: 7200, pelayanan: 4800 },
+    { nama: 'PENANGANAN KASUS DENGAN INJEKSI', sarana: 13500, pelayanan: 9000 },
+    { nama: 'PERAWATAN LUKA SEDERHANA', sarana: 18000, pelayanan: 12000 },
+    { nama: 'TINDAKAN PERAWATAN LUKA SEDERHANA', sarana: 18000, pelayanan: 12000 },
+    { nama: 'TINDAKAN PERAWATAN LUKA DENGAN PENYULIT', sarana: 34200, pelayanan: 22800 },
+    { nama: 'TINDAKAN ANGKAT JAHITAN', sarana: 18000, pelayanan: 12000 },
+    { nama: 'TINDAKAN JAHIT LUKA 1 S.D 3 JAHITAN', sarana: 49500, pelayanan: 33000 },
+    { nama: 'TINDAKAN JAHIT LUKA SETIAP JAHITAN BERIKUTNYA', sarana: 5400, pelayanan: 3600 },
+    { nama: 'TINDAKAN EKSISI ,CROSS INCISI, INCISI', sarana: 61200, pelayanan: 40800 },
+    { nama: 'PENANGANAN KASUS DENGAN NEBULIZER', sarana: 34200, pelayanan: 22800 },
+    { nama: 'TINDAKAN NEBULIZER', sarana: 34200, pelayanan: 22800 },
+    { nama: 'PEMBERIAN SERUM ANTI TETANUS (ATS)', sarana: 49500, pelayanan: 33000 },
+    { nama: 'PEMBERIAN ANTI TETANUS SERUM (ATS)', sarana: 49500, pelayanan: 33000 },
+    { nama: 'CEK GDS', sarana: 27000, pelayanan: 18000 },
+    { nama: 'CEK GULA DARAH STIK', sarana: 27000, pelayanan: 18000 },
+    { nama: 'GULA DARAH STIK', sarana: 27000, pelayanan: 18000 },
+    { nama: 'CEK HEMOGLOBIN STIK', sarana: 27000, pelayanan: 18000 },
+    { nama: 'CEK HEMOGLOBIN', sarana: 27000, pelayanan: 18000 },
+    { nama: 'HEMOGLOBIN', sarana: 27000, pelayanan: 18000 },
+    { nama: 'HEMOGLOBIN STIK', sarana: 27000, pelayanan: 18000 },
+    { nama: 'URIN RUTIN STIK', sarana: 20700, pelayanan: 13800 },
+    { nama: 'CEK URIN RUTIN STIK', sarana: 20700, pelayanan: 13800 },
+    { nama: 'MALARIA RDT', sarana: 27000, pelayanan: 18000 },
+    { nama: 'RDT MALARIA', sarana: 27000, pelayanan: 18000 },
+    { nama: 'CEK ASAM URAT', sarana: 27000, pelayanan: 18000 },
+    { nama: 'CEK ASAM URAT STIK', sarana: 27000, pelayanan: 18000 },
+    { nama: 'ASAM URAT', sarana: 27000, pelayanan: 18000 },
+    { nama: 'CEK KOLESTROL', sarana: 29700, pelayanan: 19800 },
+    { nama: 'CEK KOLESTROL STIK', sarana: 29700, pelayanan: 19800 },
+    { nama: 'CEK KOLESTROL TOTAL STIK', sarana: 29700, pelayanan: 19800 },
+    { nama: 'KOLESTROL', sarana: 29700, pelayanan: 19800 },
+    { nama: 'CEK DARAH RUTIN/DARAH LENGKAP', sarana: 27000, pelayanan: 18000 },
+    { nama: 'DARAH RUTIN/DARAH LENGKAP', sarana: 27000, pelayanan: 18000 },
+    { nama: 'DARAH RUTIN/DL', sarana: 27000, pelayanan: 18000 },
+    { nama: 'PEMERIKSAAN DARAH RUTIN/DARAH LENGKAP', sarana: 27000, pelayanan: 18000 },
+    { nama: 'PEMERIKSAAN IBU HAMIL ANC ( ANTENATAL CARE) RUTIN', sarana: 20700, pelayanan: 13800 },
+    { nama: 'PEMERIKSAAN IBU HAMIL ANC (ANTENATAL CARE)', sarana: 20700, pelayanan: 13800 },
+    { nama: 'PEMERIKSAAN IBU HAMIL ANC  (ANTENATAL CARE)', sarana: 20700, pelayanan: 13800 },
+    { nama: 'TES KEHAMILAN', sarana: 13500, pelayanan: 9000 },
+    { nama: 'TEST KEHAMILAN', sarana: 13500, pelayanan: 9000 },
+    { nama: 'GOLONGAN DARAH', sarana: 10800, pelayanan: 7200 },
+    { nama: 'CEK GOLONGAN DARAH', sarana: 10800, pelayanan: 7200 },
+    { nama: 'RHESUS', sarana: 11700, pelayanan: 7800 },
+    { nama: 'TINDIK TELINGA BAYI', sarana: 22500, pelayanan: 15000 },
+    { nama: 'TINDIK TELINGA', sarana: 22500, pelayanan: 15000 },
+    { nama: 'TINDAKAN TINDIK TELINGA BAYI', sarana: 22500, pelayanan: 15000 },
+    { nama: 'EKSTRAKSI CERUMEN PROP TELINGA', sarana: 22500, pelayanan: 15000 },
+    { nama: 'PELAYANAN CALON PENGHANTIN/KESPRO', sarana: 51300, pelayanan: 34200 },
+    { nama: 'PELAYANAN PEMERIKSAAN CALON PENGANTIN/KESPRO', sarana: 51300, pelayanan: 34200 },
+    { nama: 'PELAYANAN KESEHATAN NEONATUS', sarana: 20700, pelayanan: 13800 },
+    { nama: 'PELAYANAN KESEHATAN IBU NIFAS', sarana: 20700, pelayanan: 13800 },
+    { nama: 'PENCABUTAN GIGI DENGAN ANASTESI LOKAL (TANPA PENYULIT)', sarana: 27000, pelayanan: 18000 },
+    { nama: 'TUMPATAN SEMENTARA UNTUK PERAWATAN SARAF (KUNTUNGAN 1)', sarana: 40500, pelayanan: 27000 },
+    { nama: 'TUMPATAN SEMENTARA UNTUK PERAWATAN SARAF (KUNJUNGAN III)', sarana: 34200, pelayanan: 22800 },
+    { nama: 'TUMPATAN TETAP DENGAN GLASS IONOMER CEMENT ( GIC) SATU PERMUKAAN', sarana: 47700, pelayanan: 31800 },
+    { nama: 'PELEPASAN SUSUK KB', sarana: 162000, pelayanan: 108000 },
+    { nama: 'PELAYANAN INJEKSI KB', sarana: 16200, pelayanan: 10800 },
+    { nama: 'PEMASANGAN INFUS SET PERTAMA', sarana: 88200, pelayanan: 58800 },
+    { nama: 'PEMASANGAN NASO GASTRIC TUBE (NGT)', sarana: 133200, pelayanan: 88800 },
+    { nama: 'PELAYANAN PERAWATAN RUMAH (HOME CARE)', sarana: 94500, pelayanan: 63000 },
+    { nama: 'CEK BUTA WARNA', sarana: 13500, pelayanan: 9000 },
+    { nama: 'PEMERIKSAAN  BUTA WARNA', sarana: 13500, pelayanan: 9000 },
+    { nama: 'PEMERIKSAAN EKG', sarana: 34200, pelayanan: 22800 },
+    { nama: 'TINDAKAN IRIGASI MATA', sarana: 18000, pelayanan: 12000 },
+    { nama: 'OKSIGEN 30 MENIT PERTAMA', sarana: 27000, pelayanan: 18000 },
+    { nama: 'OKSIGEN TIAP 30 MENIT BERIKUTNYA', sarana: 9000, pelayanan: 6000 }
+];
+
+// State Global & Inisialisasi Database Lokal
+let dataPasien = JSON.parse(localStorage.getItem('dataUraianHarian')) || [];
+let currentTherapyIndex = 0;
+
+// =========================================================================
+// 2. MODUL ENTRI DATA & INTERFACE FORM (MANAJEMEN ROW DROPDOWN)
+// =========================================================================
+
+// Fungsi untuk menambah baris form therapy dinamis dengan Dropdown Master Data
+function tambahBarisTherapy(data = { nama: '', sarana: 0, pelayanan: 0 }) {
+    currentTherapyIndex++;
+    const tbody = document.getElementById('tbody-therapy');
+    if (!tbody) return;
+
+    const tr = document.createElement('tr');
+    tr.id = `therapy-row-${currentTherapyIndex}`;
+    
+    // Generate elemen opsi dari data master
+    let options = MASTER_THERAPY.map(t => 
+        `<option value="${t.nama}" data-sarana="${t.sarana}" data-pelayanan="${t.pelayanan}" ${data.nama === t.nama ? 'selected' : ''}>${t.nama}</option>`
+    ).join('');
+    
+    // Periksa apakah data lama berupa entri manual (tidak ada di master)
+    const isLainnya = data.nama && !MASTER_THERAPY.find(t => t.nama === data.nama);
+
+    tr.innerHTML = `
+        <td style="padding:5px; border:1px solid #CBD5E1;">
+            <select class="t-nama" onchange="autoFillHarga(this)" style="width:100%; padding:5px; border:1px solid #CBD5E1; border-radius:4px;">
+                <option value="">-- Pilih Therapy / Tindakan --</option>
+                ${options}
+                <option value="LAINNYA" ${isLainnya ? 'selected' : ''}>-- Lainnya (Input Manual) --</option>
+            </select>
+            <input type="text" class="t-nama-manual" value="${isLainnya ? data.nama : ''}" placeholder="Ketik nama tindakan manual..." style="width:100%; padding:5px; margin-top:5px; border:1px solid #CBD5E1; border-radius:4px; display: ${isLainnya ? 'block' : 'none'};">
+        </td>
+        <td style="padding:5px; border:1px solid #CBD5E1;">
+            <input type="number" class="t-sarana" value="${data.sarana}" style="width:100%; padding:5px; border:1px solid #CBD5E1; border-radius:4px;" ${isLainnya ? '' : 'readonly'}>
+        </td>
+        <td style="padding:5px; border:1px solid #CBD5E1;">
+            <input type="number" class="t-pelayanan" value="${data.pelayanan}" style="width:100%; padding:5px; border:1px solid #CBD5E1; border-radius:4px;" ${isLainnya ? '' : 'readonly'}>
+        </td>
+        <td style="padding:5px; border:1px solid #CBD5E1; text-align:center;">
+            <button type="button" onclick="hapusBarisTherapy(${currentTherapyIndex})" style="background:#EF4444; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;">X</button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+}
+
+// Fungsi Auto-Fill Harga ketika Dropdown dipilih
+function autoFillHarga(selectElement) {
+    const row = selectElement.closest('tr');
+    const inputManual = row.querySelector('.t-nama-manual');
+    const inputSarana = row.querySelector('.t-sarana');
+    const inputPelayanan = row.querySelector('.t-pelayanan');
+    
+    if (selectElement.value === 'LAINNYA') {
+        inputManual.style.display = 'block';
+        inputManual.value = '';
+        inputSarana.value = 0;
+        inputPelayanan.value = 0;
+        inputSarana.removeAttribute('readonly');
+        inputPelayanan.removeAttribute('readonly');
+    } else {
+        inputManual.style.display = 'none';
+        inputManual.value = '';
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const sarana = selectedOption.getAttribute('data-sarana') || 0;
+        const pelayanan = selectedOption.getAttribute('data-pelayanan') || 0;
+        
+        inputSarana.value = sarana;
+        inputPelayanan.value = pelayanan;
+        inputSarana.setAttribute('readonly', true);
+        inputPelayanan.setAttribute('readonly', true);
+    }
+}
+
+// Menghapus baris item tindakan dari form
+function hapusBarisTherapy(index) {
+    const row = document.getElementById(`therapy-row-${index}`);
+    if (row) row.remove();
+}
+
+// Ambil kumpulan objek data therapy dari form input saat tombol simpan ditekan
+function getTherapyFormData() {
+    const rows = document.querySelectorAll('#tbody-therapy tr');
+    let listTherapy = [];
+    rows.forEach(row => {
+Gunakan kode dengan hati-hati.
+const selectNama = row.querySelector('.t-nama').value;
+const namaManual = row.querySelector('.t-nama-manual').value;
+const sarana = parseFloat(row.querySelector('.t-sarana').value) || 0;
+const pelayanan = parseFloat(row.querySelector('.t-pelayanan').value) || 0;
+let namaFinal = selectNama === 'LAINNYA' ? namaManual.toUpperCase() : selectNama;
+if (namaFinal) {
+listTherapy.push({ nama: namaFinal, sarana: sarana, pelayanan: pelayanan });
+}
+});
+return listTherapy;
+}
+// =========================================================================
+// 3. MODUL IMPORT EXCEL (.XLSX) LANGSUNG KE SYSTEM
+// =========================================================================
+function importExcelUraianHarian(event) {
+const file = event.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = function(e) {
+const data = new Uint8Array(e.target.result);
+const workbook = XLSX.read(data, { type: 'array' });
+const firstSheetName = workbook.SheetNames[0];
+const worksheet = workbook.Sheets[firstSheetName];
+// Ubah worksheet menjadi format JSON array matrix
+const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+let importedPasien = [];
+// Loop membaca baris, lewati baris header (sesuaikan indeks awal berdasarkan template Excel Anda)
+for (let i = 1; i < jsonData.length; i++) {
+const row = jsonData[i];
+if (!row || row.length === 0 || !row[1]) continue; // Lewati jika nama pasien kosong
+// Parsing item therapy terstruktur kembali
+let therapyItems = [];
+if (row[6]) { // Asumsi Kolom G memuat string koma/pemisah item tindakan
+const items = row[6].split(';');
+items.forEach(itm => {
+let match = MASTER_THERAPY.find(m => m.nama === itm.trim().toUpperCase());
+therapyItems.push({
+nama: itm.trim().toUpperCase(),
+sarana: match ? match.sarana : 0,
+pelayanan: match ? match.pelayanan : 0
+});
+});
+}
+importedPasien.push({
+id: row[0] || Date.now() + i,
+tanggal: row[1], // Format: YYYY-MM-DD
+no_skr: row[2] || '',
+nama: row[3] || '',
+alamat: row[4] || '',
+status_bayar: row[5] || 'UMUM',
+therapy: therapyItems
+});
+}
+if(importedPasien.length > 0) {
+dataPasien = [...dataPasien, ...importedPasien];
+localStorage.setItem('dataUraianHarian', JSON.stringify(dataPasien));
+alert(${importedPasien.length} Data Berhasil Diimport!);
+if (typeof renderTablePasien === "function") renderTablePasien(); // Refresh tabel view utama jika ada
+} else {
+alert("Tidak ada data valid yang bisa diimport.");
+}
+};
+reader.readAsArrayBuffer(file);
+}
+// =========================================================================
+// 4. MODUL EXPORT EXCEL (.XLSX) REKAPITULASI DUA FORMAT TINGKATAN
+// =========================================================================
+// FORMAT 1: Cetak Uraian Harian Lembar Kerja (Per Pasien & Per Tindakan)
+function exportToExcelUraianHarian() {
+let excelRows = [
+["NO", "TANGGAL", "NO SKR / REGISTER", "NAMA PASIEN", "ALAMAT", "STATUS", "NAMA THERAPY / TINDAKAN", "JASA SARANA", "JASA PELAYANAN", "TOTAL"]
+];
+let nomorUrut = 1;
+dataPasien.forEach(pasien => {
+if (pasien.therapy && pasien.therapy.length > 0) {
+pasien.therapy.forEach((th, idx) => {
+let total = th.sarana + th.pelayanan;
+// Gabungkan baris identitas pasien hanya pada item tindakan pertama
+excelRows.push([
+idx === 0 ? nomorUrut : "",
+idx === 0 ? pasien.tanggal : "",
+idx === 0 ? pasien.no_skr : "",
+idx === 0 ? pasien.nama : "",
+idx === 0 ? pasien.alamat : "",
+idx === 0 ? pasien.status_bayar : "",
+th.nama,
+th.sarana,
+th.pelayanan,
+total
+]);
+});
+nomorUrut++;
+} else {
+excelRows.push([nomorUrut++, pasien.tanggal, pasien.no_skr, pasien.nama, pasien.alamat, pasien.status_bayar, "-", 0, 0, 0]);
+}
+});
+const wb = XLSX.utils.book_new();
+const ws = XLSX.utils.aoa_to_sheet(excelRows);
+XLSX.utils.book_append_sheet(wb, ws, "Uraian Harian Retribusi");
+XLSX.writeFile(wb, URAIAN_HARIAN_RETRIBUSI_PKM_TERING_SEBERANG_${new Date().toISOString().slice(0,10)}.xlsx);
+}
+// FORMAT 2: Cetak Rekap Bulanan Global (Sesuai Layout Form Buku Pendapatan Puskesmas)
+function exportToExcelRekapBulanan(bulanTahun) { // Parameter format: "YYYY-MM"
+let targetBulan = bulanTahun || new Date().toISOString().slice(0, 7);
+// Inisialisasi struktur map hitung agregat total kuantitas per tindakan khusus bulan terpilih
+let rekapMap = {};
+MASTER_THERAPY.forEach(t => {
+rekapMap[t.nama] = { nama: t.nama, sarana: t.sarana, pelayanan: t.pelayanan, qty: 0 };
+});
+// Proses kalkulasi filter internal
+dataPasien.forEach(p => {
+if (p.tanggal && p.tanggal.startsWith(targetBulan)) {
+p.therapy.forEach(th => {
+if (rekapMap[th.nama]) {
+rekapMap[th.nama].qty++;
+} else {
+// Tindakan manual diluar master data
+rekapMap[th.nama] = { nama: th.nama, sarana: th.sarana, pelayanan: th.pelayanan, qty: 1 };
+}
+});
+}
+});
+// Susun Layout Baris Excel
+let excelRows = [
+["REKAPITULASI BULANAN PENERIMAAN RETRIBUSI"],
+[UPTD PUSKESMAS TERING SEBERANG - PERIODE: ${targetBulan}],
+[], // Spasi
+["NO", "NAMA LAYANAN / THERAPY / TINDAKAN", "TARIF SARANA", "TARIF PELAYANAN", "JUMLAH KUNJUNGAN/QTY", "TOTAL SARANA", "TOTAL PELAYANAN", "TOTAL PENDAPATAN"]
+];
+let no = 1;
+let grandTotalSarana = 0;
+let grandTotalPelayanan = 0;
+let grandTotalSemua = 0;
+for (let key in rekapMap) {
+let item = rekapMap[key];
+if (item.qty > 0) { // Hanya tampilkan tindakan yang memiliki transaksi kunjungan
+let totSarana = item.sarana * item.qty;
+let totPelayanan = item.pelayanan * item.qty;
+let totSemua = totSarana + totPelayanan;
+grandTotalSarana += totSarana;
+grandTotalPelayanan += totPelayanan;
+grandTotalSemua += totSemua;
+excelRows.push([
+no++,
+item.nama,
+item.sarana,
+item.pelayanan,
+item.qty,
+totSarana,
+totPelayanan,
+totSemua
+]);
+}
+}
+// Tambahkan baris total akumulatif di bawah tabel
+excelRows.push(["", "TOTAL KESELURUHAN", "", "", "", grandTotalSarana, grandTotalPelayanan, grandTotalSemua]);
+const wb = XLSX.utils.book_new();
+const ws = XLSX.utils.aoa_to_sheet(excelRows);
+XLSX.utils.book_append_sheet(wb, ws, "Rekap Bulanan Retribusi");
+XLSX.writeFile(wb, REKAP_BULANAN_SI_RETRIBUSI_${targetBulan}.xlsx);
+}
+
+<FollowUp>
+Apakah Anda membutuhkan **penyesuaian elemen HTML form input** (seperti ID modal/tabel) agar script dropdown ini langsung terhubung dengan template desain interface yang Anda miliki saat ini?
+</FollowUp>
