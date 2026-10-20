@@ -129,6 +129,8 @@
                     <div class="section-header">
                         <h3>Data Retribusi (Format Excel)</h3>
                         <div>
+                            <input type="file" id="fileImport" accept=".csv" style="display: none;" onchange="importCSV(event)">
+                            <button class="btn btn-secondary" onclick="document.getElementById('fileImport').click()"><i class="fa-solid fa-file-import"></i> Import CSV</button>
                             <button class="btn btn-primary" onclick="bukaForm()"><i class="fa-solid fa-plus"></i> Input Pasien Baru</button>
                             <button class="btn btn-success" onclick="exportPersisExcel()"><i class="fa-solid fa-file-excel"></i> Export Persis Excel</button>
                             <button class="btn btn-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i> Print PDF</button>
@@ -301,13 +303,120 @@
             Swal.fire({ icon: 'success', title: 'Tersimpan!', text: 'Data berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
         });
 
+        // --- IMPORT CSV ---
+        function importCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n').map(line => line.replace(/\r$/, '')); // Handle Windows CRLF
+                
+                let importedData = [];
+                let currentPatient = null;
+                let isValidData = false;
+
+                // Helper untuk membersihkan format uang " Rp 8.100 " menjadi angka 8100
+                const cleanCurrency = (str) => {
+                    if (!str) return 0;
+                    let cleaned = str.replace(/[^0-9]/g, ''); // Hapus semua kecuali angka
+                    return parseInt(cleaned) || 0;
+                };
+
+                // Helper untuk format tanggal d/m/yyyy -> yyyy-mm-dd
+                const parseDate = (dateStr) => {
+                    let parts = dateStr.split('/');
+                    if (parts.length === 3) {
+                        let d = parts[0].padStart(2, '0');
+                        let m = parts[1].padStart(2, '0');
+                        let y = parts[2];
+                        return `${y}-${m}-${d}`;
+                    }
+                    return new Date().toISOString().split('T')[0];
+                };
+
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i];
+                    if(!line.trim()) continue;
+
+                    // Deteksi jika sudah masuk baris data (dimulai dengan tanggal atau koma)
+                    if (line.includes('TANGGAL,NO,NAMA PASIEN')) {
+                        isValidData = true;
+                        continue;
+                    }
+
+                    // Stop jika sudah masuk area JUMLAH
+                    if (line.startsWith('JUMLAH') || line.startsWith('JUMLAH KESELURUHAN')) {
+                        break;
+                    }
+
+                    if (!isValidData) continue;
+
+                    // Split by comma (perhatikan jika ada koma di dalam string, tapi format ini aman menggunakan split biasa)
+                    let cols = line.split(',');
+
+                    let tanggalStr = cols[0] ? cols[0].trim() : '';
+                    let no = cols[1] ? cols[1].trim() : '';
+                    let nama = cols[2] ? cols[2].trim() : '';
+                    let alamat = cols[3] ? cols[3].trim() : '';
+                    let jenis = cols[4] ? cols[4].trim() : '';
+                    let therapy = cols[5] ? cols[5].trim() : '';
+                    let saranaStr = cols[7] ? cols[7].trim() : '';
+                    let pelayananStr = cols[8] ? cols[8].trim() : '';
+
+                    let sarana = cleanCurrency(saranaStr);
+                    let pelayanan = cleanCurrency(pelayananStr);
+
+                    // Abaikan baris subtotal (tidak ada tanggal, nama, dan therapy)
+                    if (!tanggalStr && !nama && !therapy) continue;
+
+                    if (tanggalStr) {
+                        // Ini adalah Pasien Baru
+                        currentPatient = {
+                            id: Date.now() + Math.random(), // ID unik
+                            tanggal: parseDate(tanggalStr),
+                            nama: nama,
+                            alamat: alamat,
+                            jenis: jenis,
+                            therapies: []
+                        };
+                        importedData.push(currentPatient);
+                    }
+
+                    // Tambahkan Therapy ke Pasien saat ini
+                    if (currentPatient && therapy) {
+                        currentPatient.therapies.push({
+                            nama: therapy,
+                            sarana: sarana,
+                            pelayanan: pelayanan,
+                            total: sarana + pelayanan
+                        });
+                    }
+                }
+
+                if (importedData.length > 0) {
+                    // Gabungkan dengan data lama (atau ganti jika mau pakai = )
+                    dataPasien = dataPasien.concat(importedData);
+                    localStorage.setItem('dataUraianHarian', JSON.stringify(dataPasien));
+                    renderTabel();
+                    Swal.fire('Sukses!', `${importedData.length} data pasien berhasil diimport dari CSV.`, 'success');
+                } else {
+                    Swal.fire('Gagal', 'Format CSV tidak sesuai atau data kosong.', 'error');
+                }
+                
+                event.target.value = ''; // Reset input
+            };
+            reader.readAsText(file);
+        }
+
         // --- RENDER TABEL WEB (MIRIP EXCEL) ---
         function renderTabel() {
             const tbody = document.getElementById('tbody-utama');
             tbody.innerHTML = '';
 
             if(dataPasien.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="text-center" style="padding:20px; color:#94A3B8;">Belum ada data. Silakan input.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center" style="padding:20px; color:#94A3B8;">Belum ada data. Silakan input manual atau import CSV.</td></tr>';
                 return;
             }
 
@@ -320,14 +429,14 @@
 
             let nomorUrut = 1;
 
-            // Looping per tanggal
+            // Looping per tanggal (Urutkan dari tanggal terlama ke terbaru)
             Object.keys(grupTanggal).sort().forEach(tgl => {
                 let pasienHariIni = grupTanggal[tgl];
                 let totalSaranaHariIni = 0;
                 let totalPelayananHariIni = 0;
 
                 // Looping per pasien di tanggal tersebut
-                pasienHariIni.forEach((pasien, pIndex) => {
+                pasienHariIni.forEach((pasien) => {
                     // Looping per therapy
                     pasien.therapies.forEach((th, tIndex) => {
                         let tr = document.createElement('tr');
@@ -396,8 +505,9 @@
                 return;
             }
 
-            // Dapatkan Nama Bulan dari data pertama
-            let firstDate = new Date(dataPasien[0].tanggal);
+            // Dapatkan Nama Bulan dari data pertama (Sort dulu datanya)
+            let sortedData = [...dataPasien].sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal));
+            let firstDate = new Date(sortedData[0].tanggal);
             let namaBulan = firstDate.toLocaleString('id-ID', { month: 'long' }).toUpperCase();
             let tahun = firstDate.getFullYear();
 
@@ -409,7 +519,7 @@
             csv += `,,,,,NAMA OBAT/BHP,,,,,,\n`;
 
             let grupTanggal = {};
-            dataPasien.forEach(p => {
+            sortedData.forEach(p => {
                 if(!grupTanggal[p.tanggal]) grupTanggal[p.tanggal] = [];
                 grupTanggal[p.tanggal].push(p);
             });
