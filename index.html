@@ -249,7 +249,7 @@
     <!-- ==================== SCRIPT LOGIC ==================== -->
     <script>
         // =====================================================================
-        // 1. MASTER DATA THERAPY (Tarif Standar PKM Tering Seberang)
+        // 1. MASTER DATA THERAPY
         // =====================================================================
         const MASTER_THERAPY = [
             { nama: 'PENGOBATAN UMUM', sarana: 8100, pelayanan: 5400 },
@@ -351,15 +351,26 @@
             if (isNaN(d.getTime())) return dateString;
             return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
         };
+        
         const parseTanggalString = (str) => {
-            if (!str) return new Date().toISOString().split('T')[0];
+            if (!str || str === '#REF!') return new Date().toISOString().split('T')[0];
+            
+            // Handle format "02 January 2026"
+            const d = new Date(str);
+            if (!isNaN(d.getTime()) && String(str).includes(' ')) {
+                return d.toISOString().split('T')[0];
+            }
+
+            // Handle format dd/mm/yyyy
             const parts = String(str).split('/');
             if (parts.length === 3 && parts[2].length >= 4) {
                 return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
             }
+            
             if (String(str).includes('-')) return String(str);
             return new Date().toISOString().split('T')[0];
         };
+        
         const cleanCurrency = (val) => {
             if (val === null || val === undefined || val === '') return 0;
             if (typeof val === 'number') return val;
@@ -391,7 +402,7 @@
         }
 
         // =====================================================================
-        // 5. FORM DINAMIS THERAPY (Input Pasien Baru)
+        // 5. FORM DINAMIS THERAPY
         // =====================================================================
         function tambahBarisTherapy(data = { nama: '', sarana: '', pelayanan: '' }) {
             currentTherapyIndex++;
@@ -610,7 +621,6 @@
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array', cellDates: true });
 
-                // Gabungkan semua teks dari semua sheet untuk deteksi format
                 let allText = '';
                 workbook.SheetNames.forEach(sn => {
                     const ws = workbook.Sheets[sn];
@@ -764,26 +774,28 @@
                 if (!isHeaderFound) continue;
                 if (row[0] && row[0].includes('TOTAL')) break;
 
-                const nomorSTS = rows[i][1];
-                const nomorSIPD = rows[i][2];
-                const uraian = rows[i][3];
-                const tglTerima = rows[i][4];
-                const jumlah = rows[i][6];
+                let noRaw = rows[i][0];
+                let nomorSTS = rows[i][1];
+                let nomorSIPD = rows[i][2];
+                let uraian = rows[i][3];
+                let tglTerima = rows[i][4];
+                let tglSetor = rows[i][5];
+                let jumlah = rows[i][6];
+
+                // Skip jika baris adalah error #REF!
+                if (String(noRaw).includes('#REF!') || String(nomorSTS).includes('#REF!')) continue;
 
                 if (nomorSTS && String(nomorSTS).trim() !== '') {
-                    let tglString;
-                    if (tglTerima instanceof Date) tglString = tglTerima.toISOString().split('T')[0];
-                    else if (typeof tglTerima === 'number') {
-                        const excelDate = XLSX.SSF.parse_date_code(tglTerima);
-                        tglString = `${excelDate.y}-${String(excelDate.m).padStart(2, '0')}-${String(excelDate.d).padStart(2, '0')}`;
-                    } else tglString = parseTanggalString(String(tglTerima));
-
+                    let tglTerimaStr = parseTanggalString(String(tglTerima));
+                    let tglSetorStr = parseTanggalString(String(tglSetor));
+                    
                     imported.push({
                         no: counter++,
                         nomorSTS: String(nomorSTS).trim(),
-                        nomorSIPD: String(nomorSIPD || '').trim(),
-                        uraian: String(uraian || '').trim(),
-                        tanggal: tglString,
+                        nomorSIPD: String(nomorSIPD || '').replace('#REF!', '').trim(),
+                        uraian: String(uraian || '').replace('#REF!', '').trim(),
+                        tanggal: tglTerimaStr, // Tanggal STS
+                        tglSetor: tglSetorStr,
                         jumlah: cleanCurrency(jumlah)
                     });
                 }
@@ -1044,7 +1056,7 @@
             dataSTS.forEach((sts, idx) => {
                 ws_data.push([
                     idx + 1, sts.nomorSTS, sts.nomorSIPD, sts.uraian,
-                    formatTanggalExcel(sts.tanggal), formatTanggalExcel(sts.tanggal), sts.jumlah
+                    formatTanggalExcel(sts.tanggal), formatTanggalExcel(sts.tglSetor || sts.tanggal), sts.jumlah
                 ]);
                 total += sts.jumlah;
             });
@@ -1071,30 +1083,86 @@
             ws_data.push(['FORM PENGISIAN KONFIRMASI PENYETORAN PENDAPATAN']);
             ws_data.push(['TAHUN ANGGARAN 2026']);
             ws_data.push([]);
-            ws_data.push(['No', 'No. STS', 'Nomor STS SIPD', 'Nilai STS', 'Tanggal STS', 'Penyetoran Pendapatan - Dari Tanggal', 'Penyetoran Pendapatan - Hingga Tanggal']);
+            ws_data.push(['Petunjuk Pengisian:']);
+            ws_data.push(['1. Mohon untuk tidak merubah format excel penulisan pada form ini (tulis tanggal sesuai dengan format excel yg ada) dan tidak menambahkan kolom kenan dan/atau kiri.']);
+            ws_data.push(['2. Mohon isikan kolom "No. STS" sesuai dengan nomor seluruh STS selama TA 2026.']);
+            ws_data.push(['3. Mohon isikan kolom "Nilai STS" sesuai dengan nilai setoran masing-masing STS selama TA 2026.']);
+            ws_data.push(['4. Mohon isikan kolom "Tanggal STS" sesuai dengan tanggal masing-masing STS selama TA 2026.']);
+            ws_data.push(['5. Mohon isikan kolom "Penyetoran Pendapatan yang Diterima dari Tanggal" sesuai dengan tanggal awal penerimaan Pendapatan atas STS terkait berdasarkan kondisi sesungguhnya dan/atau catatan penerimaan PKM.']);
+            ws_data.push(['6. Mohon isikan kolom "Penyetoran Pendapatan yang Diterima Hingga Tanggal" sesuai dengan tanggal terakhir penerimaan Pendapatan atas STS terkait berdasarkan kondisi sesungguhnya dan/atau catatan penerimaan PKM.']);
+            ws_data.push(['7. Mohon pastikan jika seluruh STS telah terisi pada Form Pengisian Konfirmasi Penyetoran Pendapatan dengan membandingkan antara nilai total pada tabel dengan nilai realisasi pendapatan PKM selama TA 2026.']);
+            ws_data.push([]);
+            ws_data.push(['Daftar Jangka Waktu Penyetoran Pendapatan UPT PKM TERING SEBERANG TAHUN 2026']);
+            ws_data.push(['No', 'No. STS', '', 'Nilai STS', 'Tanggal STS', 'Penyetoran Pendapatan yang Diterima', '']);
+            ws_data.push(['', '', '', '', '', 'Dari Tanggal', 'Hingga Tanggal']);
 
             let total = 0;
             dataSTS.forEach((sts, idx) => {
+                // Konversi ke Date object agar dikenali Excel
+                let dSTS = new Date(sts.tanggal);
+                let dDari = new Date(sts.tanggal);
+                let dHingga = new Date(sts.tglSetor || sts.tanggal);
+                
+                // Fallback
+                if (isNaN(dSTS.getTime())) dSTS = sts.tanggal;
+                if (isNaN(dDari.getTime())) dDari = sts.tanggal;
+                if (isNaN(dHingga.getTime())) dHingga = sts.tglSetor || sts.tanggal;
+
                 ws_data.push([
-                    idx + 1, sts.nomorSTS, sts.nomorSIPD, sts.jumlah,
-                    formatTanggalExcel(sts.tanggal),
-                    formatTanggalExcel(sts.tanggal),
-                    formatTanggalExcel(sts.tanggal)
+                    idx + 1, 
+                    sts.nomorSTS, 
+                    sts.nomorSIPD, 
+                    sts.jumlah,
+                    dSTS,
+                    dDari,
+                    dHingga
                 ]);
                 total += sts.jumlah;
             });
+            
+            ws_data.push(['', '', '', total, '', '', '']);
             ws_data.push([]);
-            ws_data.push(['TOTAL', '', '', total, '', '', '']);
             ws_data.push([]);
             ws_data.push(['', '', '', '', 'Tering Seberang, 31 Desember 2026']);
             ws_data.push(['', '', '', '', 'Kepala UPTD PKM Tering Seberang']);
             ws_data.push([]);
             ws_data.push([]);
-            ws_data.push(['', '', '', '', 'Ns. ANTI, S.Kep']);
-            ws_data.push(['', '', '', '', 'NIP. 19770727 200701 1 021']);
+            ws_data.push([]);
+            ws_data.push([]);
+            ws_data.push(['', '', '', '', 'Ns.Anti,S.Kep.']);
+            ws_data.push(['', '', '', '', 'NIP : 19770727 200701 1 021']);
 
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+            // Atur lebar kolom
+            ws['!cols'] = [
+                { wch: 5 },  // No
+                { wch: 35 }, // No STS
+                { wch: 50 }, // No SIPD
+                { wch: 15 }, // Nilai STS
+                { wch: 20 }, // Tanggal STS
+                { wch: 15 }, // Dari Tanggal
+                { wch: 15 }  // Hingga Tanggal
+            ];
+
+            // Terapkan format tanggal khusus pada kolom E, F, G
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let R = 16; R <= range.e.r; ++R) {
+                const cellE = ws['E' + (R + 1)];
+                if (cellE && cellE.t === 'n') {
+                    cellE.z = 'dd mmmm yyyy'; // Format: 02 January 2026
+                }
+                const cellF = ws['F' + (R + 1)];
+                if (cellF && cellF.t === 'n') {
+                    cellF.z = 'm/d/yyyy'; // Format: 1/2/2026
+                }
+                const cellG = ws['G' + (R + 1)];
+                if (cellG && cellG.t === 'n') {
+                    cellG.z = 'm/d/yyyy'; // Format: 1/2/2026
+                }
+            }
+
             XLSX.utils.book_append_sheet(wb, ws, 'Konfirmasi BPK');
             XLSX.writeFile(wb, `FORM KONFIRMASI BPK PKM TERING 2026.xlsx`);
             Swal.fire('Sukses!', 'File Konfirmasi BPK berhasil di-export.', 'success');
